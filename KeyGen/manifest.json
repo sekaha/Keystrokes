@@ -1,0 +1,31 @@
+{
+    "name": "Keystrokes",
+    "version": "1.0.0",
+    "manifest_version": 3,
+    "description": "An extension that captures keystroke data from typing-game sites!",
+    "homepage_url": "https://github.com/sekaha",
+    "icons": {
+        "720": "icon.png"
+    },
+    "background": {
+        "service_worker": "background.js"
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "*://*/*"
+            ],
+            "js": [
+                "content.js"
+            ]
+        }
+    ],
+    "permissions": [
+        "tabs",
+        "storage",
+        "unlimitedStorage"
+    ],
+    "action": {
+        "default_popup": "popup.html"
+    }
+}

@@ -1,0 +1,197 @@
+@font-face {
+    font-family: 'Inter var';
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url('font-files/InterVariable.woff2?v=4.0') format('woff2');
+}
+
+
+:root {
+    font-family: Inter var, sans-serif;
+    --purple: oklab(52.6%, 33.75%, -61.5%);
+    --blue: oklab(50.2%, -7.25%, -69.5%);
+    --cyan: oklab(77.8%, -24.75%, -27%);
+    --lilac: oklab(66.9%, -2.5%, -43.5%);
+    --background: oklab(28.8%, 0.75%, -5.5%);
+    --foreground: oklab(40.3%, 1%, -8%);
+}
+
+body {
+    font-size: 11px;
+    width: 256px;
+    height: 377px;
+    background-color: var(--background);
+    color: white;
+    margin: 0;
+    padding: 0;
+}
+
+#wrapper {
+    margin: 0;
+    padding: 0em 1em 0em 1em;
+}
+
+.on:before {
+    content: "";
+    background: linear-gradient(90deg,
+            oklab(62.8%, 56.25%, 31.5%),
+            oklab(71.3%, 32.5%, 36%),
+            oklab(96%, -16.5%, 49.25%),
+            oklab(87.4%, -55%, 45.25%),
+            oklab(89.3%, -42%, 3.75%),
+            oklab(47.6%, -7.5%, -73.75%),
+            oklab(52.4%, 27.5%, -68%),
+            oklab(67.3%, 68.75%, -23.25%),
+            oklab(62.8%, 56.25%, 31.5%));
+    position: absolute;
+    left: -10px;
+    bottom: 312px;
+    background-size: 400%;
+    z-index: -1;
+    filter: blur(5px);
+    -webkit-filter: blur(5px);
+    width: calc(120%);
+    height: calc(120%);
+    animation: glowing-button-85 20s linear infinite;
+    transition: opacity 0.3s ease-in-out;
+}
+
+
+.on:after {
+    content: "";
+    background: linear-gradient(90deg,
+            oklab(62.8%, 56.25%, 31.5%),
+            oklab(71.3%, 32.5%, 36%),
+            oklab(96%, -16.5%, 49.25%),
+            oklab(87.4%, -55%, 45.25%),
+            oklab(89.3%, -42%, 3.75%),
+            oklab(47.6%, -7.5%, -73.75%),
+            oklab(52.4%, 27.5%, -68%),
+            oklab(67.3%, 68.75%, -23.25%),
+            oklab(62.8%, 56.25%, 31.5%));
+    position: absolute;
+    left: -10px;
+    top: 376px;
+    background-size: 400%;
+    z-index: -1;
+    filter: blur(5px);
+    -webkit-filter: blur(5px);
+    width: calc(120%);
+    height: calc(120%);
+    animation: glowing-button-85 20s linear infinite;
+    transition: opacity 0.3s ease-in-out;
+}
+
+header {
+    font-size: 12px;
+    margin: 0;
+    padding: 0.125em;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.on {
+    background-image: linear-gradient(to right, var(--lilac), var(--cyan));
+}
+
+.off {
+    color: var(--cyan);
+    background-image: linear-gradient(to right, var(--purple), var(--blue));
+}
+
+.off #switch {
+    fill: var(--cyan);
+}
+
+@keyframes glowing-button-85 {
+    0% {
+        background-position: 0 0;
+    }
+
+    50% {
+        background-position: 400% 0;
+    }
+
+    100% {
+        background-position: 0 0;
+    }
+}
+
+#switch {
+    margin: 0 0.5em 0 0.5em;
+    padding: 0 0.5em 0 0.5em;
+    width: 1.75em;
+    height: 1.75em;
+    display: flex;
+    fill: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+header.on:hover {
+    color: var(--cyan);
+    background-image: linear-gradient(to right, var(--purple), var(--blue));
+}
+
+header.off:hover {
+    color: white;
+    background-image: linear-gradient(to right, var(--lilac), var(--cyan));
+}
+
+header.on:hover #switch {
+    fill: var(--cyan);
+}
+
+header.off:hover #switch {
+    fill: white;
+}
+
+textarea {
+    border-color: var(--foreground);
+    resize: none;
+    font-family: monospace;
+    font-weight: bold;
+    color: white;
+    width: calc(100% - 0.5em);
+    background-color: var(--foreground);
+}
+
+#layout {
+    word-break: break-all;
+    letter-spacing: 0.5em;
+    border-radius: 3px;
+}
+
+hr {
+    margin: 0;
+    border: none;
+    border-top: 1px solid var(--foreground);
+}
+
+/* Style for buttons */
+button {
+    font-weight: bold;
+    margin: 0.5em 0.5em 0.5em 0;
+    padding: 0.4em 1em;
+    background-color: var(--foreground);
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 3px;
+}
+
+button.save {
+    padding: 0.2em 0.5em;
+}
+
+button:hover {
+    background-color: var(--purple);
+}
+
+/* Style for headings */
+h2 {
+    margin: 0.5em 0 0.5em 0;
+}
