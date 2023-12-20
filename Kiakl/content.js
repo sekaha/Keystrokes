@@ -1,16 +1,17 @@
 let started = false;
 let typedTime = 0;
-let history = []
+let session = []
 let t = -1;
-
+let activeWord = document.querySelector('#words .word.active');
 
 const isCorrect = (key, duration) => {
-    // const activeWordElement = document.querySelector('#words .word.active');
-    const letters = activeWordElement.querySelectorAll('letter');
+    let activeWord = document.querySelector('#words .word.active');
     let correct = false;
 
     if (key.length == 1) {
         if (key.match(/[a-zA-Z0-9]/)) {
+            const letters = activeWord.querySelectorAll('letter');
+
             for (let i = letters.length - 1; i >= 0; i--) {
                 const letter = letters[i];
 
@@ -20,11 +21,20 @@ const isCorrect = (key, duration) => {
                 }
             }
         } else if (key == " ") {
-            correct = (letters[letters.length - 1].classList.length > 0)
+            let previousWord = activeWord.previousElementSibling;
+            correct = !(previousWord.classList.contains('error'))
         }
     }
 
-    console.log(`${duration} ${timeToType}: ${getKeyAlias(key)} ${correct ? '✓' : 'x'}`);
+    entry = {
+        key: key,
+        duration: duration,
+        correct: correct
+    };
+
+    session.push(entry);
+
+    // console.log(`${duration} ${timeToType}: ${getKeyAlias(key)} ${correct ? '✓' : 'x'}`);
     t += 1;
 }
 
@@ -41,9 +51,15 @@ const trackMonkeytype = (key, duration) => {
             isCorrect(key, duration); // Pass currentKey to isCorrect function
         });
     } else {
-        requestAnimationFrame(() => {
-            trackMonkeytype(key, duration); // Pass currentKey to isCorrect function
-        });
+        if (started) {
+            started = false;
+            console.log("ended!!!");
+
+        } else {
+            requestAnimationFrame(() => {
+                trackMonkeytype(key, duration); // Pass currentKey to isCorrect function
+            });
+        }
     }
 }
 
@@ -72,30 +88,6 @@ window.onkeydown = function (event) {
 
     if (currentUrl === "https://monkeytype.com/") {
         trackMonkeytype(event.key, timeToType);
-
-        /*if (timer.style.opacity > 0) {
-            if (!started) {
-                started = true;
-                lastStrokeTime = performance.now();
-                console.log("started", event.key);
-            }
-            console.log(event.key);
-
-            // console.log(`${i} ${typedTime.toFixed(1)}: ${char} ${inputted_key} ${isCorrect ? '✓' : 'x'}`);
-
-            // keypress = {
-            //     key: inputted_key,
-            //     correct: isCorrect,
-            //     duration: typedTime,
-            // };
-
-            // inputted_key = event.key;
-
-            // typedTime = performance.now() - lastStrokeTime;
-            // lastStrokeTime = performance.now();
-
-            // history.push(keypress)
-        }*/
     } /*else if (started) {
         started = false;
         console.log("ended");
