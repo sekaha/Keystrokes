@@ -32,7 +32,7 @@ window.onkeydown = function (event) {
                     }
                 }
 
-                // console.log(`${i} ${typedTime.toFixed(1)}: ${char} ${isCorrect ? '✓' : 'x'}`);
+                console.log(`${i} ${typedTime.toFixed(1)}: ${char} ${event.key} ${isCorrect ? '✓' : 'x'}`);
 
                 keypress = {
                     key: char,
