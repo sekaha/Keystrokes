@@ -2,7 +2,7 @@
     "name": "Kiakl",
     "version": "1.0.0",
     "manifest_version": 3,
-    "description": "Capture keystroke data from typing-games and websites! Kiakl isn't a keylogger... mostly.",
+    "description": "Capture keystroke data from typing-games! Kiakl isn't a keylogger... mostly.",
     "homepage_url": "https://github.com/sekaha/Kiakl",
     "icons": {
         "720": "icon.png"

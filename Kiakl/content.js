@@ -114,40 +114,5 @@ window.onkeydown = function (event) {
 
     if (currentUrl === "https://monkeytype.com/") {
         trackMonkeytype(event.key, timeToType);
-    } /*else if (started) {
-        started = false;
-        console.log("ended");
-
-        const session = {
-            website: currentUrl,
-            sessionID: Date.now(),
-            data: history,
-        };
-
-        // Retrieve the 'log' array from local storage and update it with the new session
-        chrome.storage.local.get({ log: [] }, (result) => {
-            const log = result.log;
-            log.push(session);
-
-            log.forEach((session, index) => {
-                console.log(`Session ${index + 1}:`);
-                console.log('Website:', session.website);
-                console.log('Session ID:', session.sessionID);
-                console.log('Data:', session.data);
-                console.log('-------------------------');
-            });
-
-            // Store the updated 'log' array back into local storage
-            chrome.storage.local.set({ log }, () => {
-                if (chrome.runtime.lastError) {
-                    console.error('Error while saving session:', chrome.runtime.lastError);
-                } else {
-                    console.log('Session saved successfully!');
-                }
-            });
-        });
-    }*/
-
-} /*else if (!currentUrl.includes("login")) {
-        console.log(event.key + Date.now().toString());
-    } */
+    }
+}
