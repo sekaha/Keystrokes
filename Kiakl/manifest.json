@@ -23,7 +23,8 @@
     "permissions": [
         "tabs",
         "storage",
-        "unlimitedStorage"
+        "unlimitedStorage",
+        "downloads"
     ],
     "action": {
         "default_popup": "popup.html"

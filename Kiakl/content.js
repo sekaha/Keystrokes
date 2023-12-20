@@ -1,8 +1,10 @@
 let started = false;
+let ended = false;
 let typedTime = 0;
-let session = []
+let history = []
 let t = -1;
 let activeWord = document.querySelector('#words .word.active');
+const currentUrl = window.location.href;
 
 const isCorrect = (key, duration) => {
     let activeWord = document.querySelector('#words .word.active');
@@ -32,7 +34,7 @@ const isCorrect = (key, duration) => {
         correct: correct
     };
 
-    session.push(entry);
+    history.push(entry);
 
     // console.log(`${duration} ${timeToType}: ${getKeyAlias(key)} ${correct ? '✓' : 'x'}`);
     t += 1;
@@ -54,13 +56,39 @@ const trackMonkeytype = (key, duration) => {
         if (started) {
             started = false;
             console.log("ended!!!");
-
+            saveData();
         } else {
             requestAnimationFrame(() => {
                 trackMonkeytype(key, duration); // Pass currentKey to isCorrect function
             });
         }
     }
+}
+
+const saveData = () => {
+    // console.log(JSON.stringify(session, null, 2));
+    const session = {
+        website: currentUrl,
+        sessionID: Date.now(),
+        data: history
+    }
+
+    chrome.storage.local.get({ log: [] }, (result) => {
+        const log = result.log;
+        log.push(session);
+        console.log(log);
+
+        // Save current session
+        chrome.storage.local.set({ log }, () => {
+            /* if (chrome.runtime.lastError) {
+                console.error('Error while saving session:', chrome.runtime.lastError);
+            } else {
+                console.log('Session saved successfully!');
+            }*/
+        });
+    });
+
+    history = [];
 }
 
 const getKeyAlias = (key) => {
@@ -83,8 +111,6 @@ window.onkeydown = function (event) {
     let now = performance.now()
     timeToType = now - lastStrokeTime;
     lastStrokeTime = now;
-
-    const currentUrl = window.location.href;
 
     if (currentUrl === "https://monkeytype.com/") {
         trackMonkeytype(event.key, timeToType);

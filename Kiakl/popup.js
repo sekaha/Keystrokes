@@ -1,6 +1,8 @@
 document.addEventListener('DOMContentLoaded', function () {
     const header = document.getElementById('toggle');
     const headerText = header.querySelector('h1');
+    const exportButton = document.getElementById('export');
+
     let activated = false;
 
     // Function to update the header state based on the 'activated' variable
@@ -17,6 +19,19 @@ document.addEventListener('DOMContentLoaded', function () {
             chrome.action.setIcon({ path: 'deactivated.png' });
         }
     }
+
+    exportButton.addEventListener('click', () => {
+        chrome.storage.local.get({ log: [] }, (result) => {
+            const jsonBlob = new Blob([JSON.stringify(result.log)], { type: 'application/json' });
+
+            chrome.downloads.download({
+                url: URL.createObjectURL(jsonBlob),
+                filename: "typingdata.json",
+                saveAs: true
+            });
+        });
+
+    });
 
     chrome.storage.local.get({ activated: false }, (result) => {
         activated = result.activated;
