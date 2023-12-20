@@ -1,8 +1,8 @@
 {
-    "name": "Keystrokes",
+    "name": "Kiakl",
     "version": "1.0.0",
     "manifest_version": 3,
-    "description": "An extension that captures keystroke data from typing-game sites!",
+    "description": "Capture keystroke data from typing-games and websites! Kiakl isn't a key logger... mostly.",
     "homepage_url": "https://github.com/sekaha",
     "icons": {
         "720": "icon.png"
