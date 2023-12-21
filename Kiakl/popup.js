@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     exportButton.addEventListener('click', () => {
         chrome.storage.local.get({ log: [] }, (result) => {
-            const jsonBlob = new Blob([JSON.stringify(result.log)], { type: 'application/json' });
+            const jsonBlob = new Blob([JSON.stringify(result.log, null, 2)], { type: 'application/json' });
 
             chrome.downloads.download({
                 url: URL.createObjectURL(jsonBlob),

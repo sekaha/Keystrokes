@@ -14,7 +14,9 @@ window.onkeydown = function (event) {
     lastStrokeTime = now;
 
     if (currentUrl === "https://monkeytype.com/") {
-        trackMonkeytype(event.key, timeToType);
+        requestAnimationFrame(() => {
+            trackMonkeytype(event.key, timeToType);; // Pass currentKey to isCorrect function
+        });
     }
 }
 
@@ -94,10 +96,6 @@ const trackMonkeytype = (key, duration) => {
             started = false;
             console.log("ended!!!");
             saveData();
-        } else {
-            requestAnimationFrame(() => {
-                trackMonkeytype(key, duration); // Pass currentKey to isCorrect function
-            });
         }
     }
 }
