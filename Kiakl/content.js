@@ -20,6 +20,10 @@ window.onkeydown = function (event) {
     }
 }
 
+window.addEventListener('beforeunload', function (event) {
+    saveData();
+})
+
 const saveData = () => {
     // console.log(JSON.stringify(session, null, 2));
     const session = {
@@ -46,6 +50,7 @@ const saveData = () => {
     history = [];
 }
 
+// ** MONKEY TYPE ** //
 const monkeytypeIsCorrect = (key, duration) => {
     let activeWord = document.querySelector('#words .word.active');
     let correct = false;
