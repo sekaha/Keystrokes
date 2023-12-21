@@ -2,9 +2,47 @@ let started = false;
 let ended = false;
 let typedTime = 0;
 let history = []
-let t = -1;
+let lastStrokeTime = 0;
+let timeToType = 0;
 let activeWord = document.querySelector('#words .word.active');
 const currentUrl = window.location.href;
+
+window.onkeydown = function (event) {
+    // If the key is a space then we need to see if the second to last word is full yet
+    let now = performance.now()
+    timeToType = now - lastStrokeTime;
+    lastStrokeTime = now;
+
+    if (currentUrl === "https://monkeytype.com/") {
+        trackMonkeytype(event.key, timeToType);
+    }
+}
+
+const saveData = () => {
+    // console.log(JSON.stringify(session, null, 2));
+    const session = {
+        website: currentUrl,
+        sessionID: Date.now(),
+        data: history
+    }
+
+    chrome.storage.local.get({ log: [] }, (result) => {
+        const log = result.log;
+        log.push(session);
+        console.log(log);
+
+        // Save current session
+        chrome.storage.local.set({ log }, () => {
+            if (chrome.runtime.lastError) {
+                console.error('Error while saving session:', chrome.runtime.lastError);
+            } else {
+                console.log('Session saved successfully!');
+            }
+        });
+    });
+
+    history = [];
+}
 
 const monkeytypeIsCorrect = (key, duration) => {
     let activeWord = document.querySelector('#words .word.active');
@@ -37,7 +75,6 @@ const monkeytypeIsCorrect = (key, duration) => {
     history.push(entry);
 
     console.log(`${duration} ${timeToType}: ${(key)} ${correct ? '✓' : 'x'}`);
-    t += 1;
 }
 
 const trackMonkeytype = (key, duration) => {
@@ -62,52 +99,5 @@ const trackMonkeytype = (key, duration) => {
                 trackMonkeytype(key, duration); // Pass currentKey to isCorrect function
             });
         }
-    }
-}
-
-const saveData = () => {
-    // console.log(JSON.stringify(session, null, 2));
-    const session = {
-        website: currentUrl,
-        sessionID: Date.now(),
-        data: history
-    }
-
-    chrome.storage.local.get({ log: [] }, (result) => {
-        const log = result.log;
-        log.push(session);
-        console.log(log);
-
-        // Save current session
-        chrome.storage.local.set({ log }, () => {
-            /* if (chrome.runtime.lastError) {
-                console.error('Error while saving session:', chrome.runtime.lastError);
-            } else {
-                console.log('Session saved successfully!');
-            }*/
-        });
-    });
-
-    history = [];
-}
-
-let currentKey = "";
-let lastStrokeTime = 0;
-let timeToType = 0;
-
-const startTimer = () => {
-    if (started) {
-        requestAnimationFrame(startTimer);
-    }
-}
-
-window.onkeydown = function (event) {
-    // If the key is a space then we need to see if the second to last word is full yet
-    let now = performance.now()
-    timeToType = now - lastStrokeTime;
-    lastStrokeTime = now;
-
-    if (currentUrl === "https://monkeytype.com/") {
-        trackMonkeytype(event.key, timeToType);
     }
 }
