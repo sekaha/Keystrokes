@@ -10,12 +10,12 @@ document.addEventListener('DOMContentLoaded', function () {
         if (activated) {
             header.classList.remove('off');
             header.classList.add('on');
-            headerText.textContent = 'Activated';
+            headerText.textContent = 'Activated :)';
             chrome.action.setIcon({ path: 'activated.png' });
         } else {
             header.classList.remove('on');
             header.classList.add('off');
-            headerText.textContent = 'Deactivated';
+            headerText.textContent = 'Deactivated :(';
             chrome.action.setIcon({ path: 'deactivated.png' });
         }
     }

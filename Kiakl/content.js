@@ -6,7 +6,7 @@ let t = -1;
 let activeWord = document.querySelector('#words .word.active');
 const currentUrl = window.location.href;
 
-const isCorrect = (key, duration) => {
+const monkeytypeIsCorrect = (key, duration) => {
     let activeWord = document.querySelector('#words .word.active');
     let correct = false;
 
@@ -36,7 +36,7 @@ const isCorrect = (key, duration) => {
 
     history.push(entry);
 
-    // console.log(`${duration} ${timeToType}: ${getKeyAlias(key)} ${correct ? '✓' : 'x'}`);
+    console.log(`${duration} ${timeToType}: ${(key)} ${correct ? '✓' : 'x'}`);
     t += 1;
 }
 
@@ -50,7 +50,7 @@ const trackMonkeytype = (key, duration) => {
         }
 
         requestAnimationFrame(() => {
-            isCorrect(key, duration); // Pass currentKey to isCorrect function
+            monkeytypeIsCorrect(key, duration); // Pass currentKey to isCorrect function
         });
     } else {
         if (started) {
@@ -91,20 +91,15 @@ const saveData = () => {
     history = [];
 }
 
-const getKeyAlias = (key) => {
-    switch (key) {
-        case "Enter":
-            return "↵";
-        case "Backspace":
-            return "⌫"
-    }
-
-    return key;
-}
-
 let currentKey = "";
 let lastStrokeTime = 0;
 let timeToType = 0;
+
+const startTimer = () => {
+    if (started) {
+        requestAnimationFrame(startTimer);
+    }
+}
 
 window.onkeydown = function (event) {
     // If the key is a space then we need to see if the second to last word is full yet
