@@ -5,8 +5,24 @@ document.addEventListener('DOMContentLoaded', function () {
 
     let activated = false;
 
+    // Toggle the extension when the header is clicked
+    header.addEventListener('click', function () {
+        activated = !activated;
+        chrome.storage.local.set({ activated }, () => {
+            // Update header state after toggling 'activated' and saving to storage
+            updateState();
+        });
+    });
+
     // Function to update the header state based on the 'activated' variable
-    function updateHeaderState() {
+    function updateState() {
+        // Toggle the logic in content.js
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+            const activeTab = tabs[0];
+            chrome.tabs.sendMessage(activeTab.id, { toggle: activated })
+        });
+
+        // Change the physical representation in the popup
         if (activated) {
             header.classList.remove('off');
             header.classList.add('on');
@@ -21,6 +37,10 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     exportButton.addEventListener('click', () => {
+        // chrome.runtime.sendMessage({ action: 'toggleVariable' }, (response) => {
+        //     console.log('Variable isEnabled:', response.isEnabled); // Log the updated value
+        // });
+
         chrome.storage.local.get({ log: [] }, (result) => {
             const jsonBlob = new Blob([JSON.stringify(result.log, null, 2)], { type: 'application/json' });
 
@@ -33,15 +53,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     });
 
+    // Load in state from last session
     chrome.storage.local.get({ activated: false }, (result) => {
         activated = result.activated;
-        updateHeaderState(); // Update header state after retrieving the 'activated' value
-    });
-
-    header.addEventListener('click', function () {
-        activated = !activated;
-        chrome.storage.local.set({ activated }, () => {
-            updateHeaderState(); // Update header state after toggling 'activated' and saving to storage
-        });
+        updateState(); // Update header state after retrieving the 'activated' value
+        console.log("should only execute once");
     });
 });

@@ -7,6 +7,9 @@
     "icons": {
         "720": "icon.png"
     },
+    "background": {
+        "service_worker": "background.js"
+    },
     "content_scripts": [
         {
             "matches": [
@@ -18,7 +21,6 @@
         }
     ],
     "permissions": [
-        "tabs",
         "storage",
         "unlimitedStorage",
         "downloads"
