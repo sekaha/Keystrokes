@@ -66,37 +66,29 @@ function mtRun() {
             // If the key is a space then we need to see if the second to last word is full yet
             let now = performance.now()
 
-            if (!started) {
-                if (document.querySelector('#words .word.active') !== null) {
+            if (started) {
+                // Update previous entry with time
+                prevEntry = history[history.length - 1]
+                prevEntry.duration = timeToType;
+                prevEntry.correct = mtIsCorrect(history[history.length - 1].key); // Pass currentKey to isCorrect function
+                console.log(prevEntry.duration, prevEntry.key);
+            } else {
+                activeWord = document.querySelector('#words .word.active');
+                if (activeWord !== null) {
                     started = true;
                 }
             }
 
-            // if (started) {
-            //     // Update previous entry with time
-            //     prevEntry = history[history.length - 1]
-            //     prevEntry.duration = timeToType;
-            //     prevEntry.correct = mtIsCorrect(history[history.length - 1].key); // Pass currentKey to isCorrect function
-            //     console.log(prevEntry.duration, prevEntry.key);
-            // } else {
-            //     activeWord = document.querySelector('#words .word.active');
-            //     if (activeWord !== null) {
-            //         started = true;
-            //     }
-            // }
+            entry = {
+                key: event.key,
+                duration: 0,
+                correct: null
+            };
 
-            // entry = {
-            //     key: event.key,
-            //     duration: 0,
-            //     correct: null
-            // };
-
-            // history.push(entry);
+            history.push(entry);
 
             timeToType = now - lastStrokeTime;
             lastStrokeTime = now;
-
-            pushKey(event.key, timeToType);
 
             // Wait a second frame so that the correctness/time div can update
             //requestAnimationFrame(() => {
@@ -131,9 +123,8 @@ function mtDivChecks(mutationsList) {
     });
 }
 
-const pushKey = (key, duration) => {
+const mtIsCorrect = (key) => {
     activeWord = document.querySelector('#words .word.active');
-    let correctness = false;
 
     if (key.length == 1) {
         if (key == " ") {
@@ -146,23 +137,23 @@ const pushKey = (key, duration) => {
                 const letter = letters[i];
 
                 if (letter.classList.length > 0) {
-                    correctness = letter.classList.contains('correct');
+                    return letter.classList.contains('correct');
                 }
             }
         }
     }
 
-    entry = {
+    /*entry = {
         key: key,
         duration: 0,
-        correct: correctness
+        correct: null
     };
 
     history.push(entry);
 
     if (debug) {
         console.log(`${duration}: ${(key)} ${correct ? '✓' : 'x'}`);
-    }
+    }*/
 }
 
 /*const mtUpdate = (key, duration) => {
