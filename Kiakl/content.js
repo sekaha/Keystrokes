@@ -69,20 +69,63 @@ function mtRun() {
         if (extensionEnabled) {
             const now = performance.now();
 
-            if (!started && document.querySelector('#words .word.active')) {
-                started = true;
-                lastStrokeTime = now;
+            // When I get back new structure idea:
+            // await (resolve key.... if not started then you gotta await a timer update, if started then no await and you can check for correctness it seems)
+
+            await new Promise(resolve => requestAnimationFrame(async () => {
+                if (!started) {
+                    await new Promise(resolve => requestAnimationFrame(() => {
+                        const timer = document.querySelector('#typingTest .time');
+                        const opacity = parseFloat(window.getComputedStyle(timer).getPropertyValue('opacity'));
+
+                        console.log(opacity)
+
+                        if (opacity > 0) {
+                            started = true;
+                            lastStrokeTime = now;
+                            console.log("started");
+                        }
+                        resolve();
+                    }))
+                }
+
+                if (started) {
+                    const timeToType = now - lastStrokeTime;
+                    lastStrokeTime = now;
+                    pushKey(event.key, timeToType);
+                    resolve();
+                }
+            }));
+
+            // If trackign hasn't started, then wait a moment and see if the key press changes that
+            /*if (!started) {
+                await new Promise(resolve => requestAnimationFrame(() => {
+                    const timer = document.querySelector('#typingTest .time');
+                    const opacity = parseFloat(window.getComputedStyle(timer).getPropertyValue('opacity'));
+
+                    console.log(opacity)
+
+                    if (opacity > 0) {
+                        started = true;
+                        lastStrokeTime = now;
+                        console.log("started");
+                    }
+                    resolve();
+                }));
             }
 
-            const timeToType = now - lastStrokeTime;
-            lastStrokeTime = now;
+            // If tracking has started, calculate the current time, wait a frame to get the correctness because the div needs to update
+            if (started) {
+                const timeToType = now - lastStrokeTime;
+                lastStrokeTime = now;
 
-            await new Promise(resolve => requestAnimationFrame(() => {
-                pushKey(event.key, timeToType);
-                resolve();
-            }));
+                await new Promise(resolve => requestAnimationFrame(() => {
+                    pushKey(event.key, timeToType);
+                    resolve();
+                }));
+            }*/
         }
-    };
+    }
 }
 
 // Callback function for MutationObserver
