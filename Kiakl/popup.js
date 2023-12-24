@@ -17,10 +17,10 @@ document.addEventListener('DOMContentLoaded', function () {
     // Function to update the header state based on the 'activated' variable
     function updateState() {
         // Toggle the logic in content.js
-        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-            const activeTab = tabs[0];
-            chrome.tabs.sendMessage(activeTab.id, { toggle: activated })
-        });
+        // chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        //     const activeTab = tabs[0];
+        //     chrome.tabs.sendMessage(activeTab.id, { toggle: activated })
+        // });
 
         // Change the physical representation in the popup
         if (activated) {

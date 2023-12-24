@@ -1,4 +1,3 @@
-let timeToType = 0
 let lastStrokeTime = 0
 let extensionEnabled = false;
 let started = false;
@@ -34,97 +33,59 @@ window.addEventListener('beforeunload', () => {
 })
 
 const saveData = async () => {
-    if (chrome.runtime?.id) {
-        try {
-            if (!chrome || !chrome.storage || !chrome.storage.local) {
-                console.error('chrome.storage.local is not available, please wait for the extension to intialize fully');
-                return;
-            }
-
-            const session = {
-                website: currentUrl,
-                sessionID: Date.now(),
-                data: history
-            };
-
-            const { log } = await chrome.storage.local.get({ log: [] });
-            log.push(session);
-
-            await chrome.storage.local.set({ log });
-
-            history = [];
-        } catch (error) {
-            console.error(error);
+    try {
+        if (!chrome || !chrome.storage || !chrome.storage.local) {
+            console.error('chrome.storage.local is not available, please wait for the extension to intialize fully');
+            return;
         }
+
+        const session = {
+            website: currentUrl,
+            sessionID: Date.now(),
+            data: history
+        };
+
+        const { log } = await chrome.storage.local.get({ log: [] });
+        log.push(session);
+
+        await chrome.storage.local.set({ log });
+
+        history = [];
+    } catch (error) {
+        console.error(error);
     }
 };
 
 // ** MONKEY TYPE ** //
 function mtRun() {
-    window.onkeydown = function (event) {
+    window.onkeydown = async function (event) {
         if (extensionEnabled) {
-            // If the key is a space then we need to see if the second to last word is full yet
-            let now = performance.now()
+            const now = performance.now();
 
-            if (!started) {
-                if (document.querySelector('#words .word.active') !== null) {
-                    started = true;
-                }
+            if (!started && document.querySelector('#words .word.active')) {
+                started = true;
+                lastStrokeTime = now;
             }
 
-            // if (started) {
-            //     // Update previous entry with time
-            //     prevEntry = history[history.length - 1]
-            //     prevEntry.duration = timeToType;
-            //     prevEntry.correct = mtIsCorrect(history[history.length - 1].key); // Pass currentKey to isCorrect function
-            //     console.log(prevEntry.duration, prevEntry.key);
-            // } else {
-            //     activeWord = document.querySelector('#words .word.active');
-            //     if (activeWord !== null) {
-            //         started = true;
-            //     }
-            // }
-
-            // entry = {
-            //     key: event.key,
-            //     duration: 0,
-            //     correct: null
-            // };
-
-            // history.push(entry);
-
-            timeToType = now - lastStrokeTime;
+            const timeToType = now - lastStrokeTime;
             lastStrokeTime = now;
 
-            pushKey(event.key, timeToType);
-
-            // Wait a second frame so that the correctness/time div can update
-            //requestAnimationFrame(() => {
-            //});
+            await new Promise(resolve => requestAnimationFrame(() => {
+                pushKey(event.key, timeToType);
+                resolve();
+            }));
         }
-    }
+    };
 }
 
 // Callback function for MutationObserver
 function mtDivChecks(mutationsList) {
     mutationsList.forEach((mutation) => {
         if (mutation.type === 'childList') {
-            activeWord = document.querySelector('#words .word.active');
+            mtActiveWord = document.querySelector('#words .word.active');
 
-            if (activeWord !== null) {
-                if (!started) {
-                    console.log("started");
-                }
-                // started = true;
-            } else {
-                if (started) {
-                    console.log("ended");
-                    prevEntry = history[history.length - 1]
-                    prevEntry.duration = timeToType;
-                    prevEntry.correct = mtIsCorrect(history[history.length - 1].key); // Pass currentKey to isCorrect function
-                    console.log(prevEntry.duration, prevEntry.key);
-                    saveData();
-                }
+            if (started && mtActiveWord == null) {
+                console.log("ended");
                 started = false;
             }
         }
@@ -132,44 +93,29 @@ function mtDivChecks(mutationsList) {
 }
 
 const pushKey = (key, duration) => {
-    activeWord = document.querySelector('#words .word.active');
-    let correctness = false;
+    // let activeWord = document.querySelector('#words .word.active');
+    if (started) {
+        let correctness = false;
 
-    if (key.length == 1) {
-        if (key == " ") {
-            let previousWord = activeWord.previousElementSibling;
-            correct = !(previousWord.classList.contains('error'))
-        } else {
-            const letters = activeWord.querySelectorAll('letter');
+        if (key.length == 1) {
+            if (key == " ") {
+                let previousWord = mtActiveWord.previousElementSibling;
+                correctness = !(previousWord.classList.contains('error'))
+            } else {
+                const letters = mtActiveWord.querySelectorAll('letter');
 
-            for (let i = letters.length - 1; i >= 0; i--) {
-                const letter = letters[i];
+                for (let i = letters.length - 1; i >= 0; i--) {
+                    const letter = letters[i];
 
-                if (letter.classList.length > 0) {
-                    correctness = letter.classList.contains('correct');
+                    if (letter.classList.length > 0) {
+                        correctness = letter.classList.contains('correct');
+                    }
                 }
             }
         }
-    }
 
-    entry = {
-        key: key,
-        duration: 0,
-        correct: correctness
-    };
-
-    history.push(entry);
-
-    if (debug) {
-        console.log(`${duration}: ${(key)} ${correct ? '✓' : 'x'}`);
+        if (debug) {
+            console.log(`${duration}: ${(key)} ${correctness ? '✓' : 'x'}`);
+        }
     }
 }
-
-/*const mtUpdate = (key, duration) => {
-    // const timer = document.querySelector('#typingTest .time');
-
-    // Wait a second frame so that the correctness div can update
-    //requestAnimationFrame(() => {
-    mtIsCorrect(key, duration); // Pass currentKey to isCorrect function
-    //});
-}*/
