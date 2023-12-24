@@ -3,12 +3,19 @@ document.addEventListener('DOMContentLoaded', function () {
     const headerText = header.querySelector('h1');
     const exportButton = document.getElementById('export');
 
-    let activated = false;
+    let enabled = false;
 
     // Toggle the extension when the header is clicked
     header.addEventListener('click', function () {
-        activated = !activated;
-        chrome.storage.local.set({ activated }, () => {
+        enabled = !enabled;
+
+        // Toggle the logic in content.js
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+            const activeTab = tabs[0];
+            chrome.tabs.sendMessage(activeTab.id, { extensionEnabled: enabled })
+        });
+
+        chrome.storage.local.set({ enabled }, () => {
             // Update header state after toggling 'activated' and saving to storage
             updateState();
         });
@@ -16,14 +23,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Function to update the header state based on the 'activated' variable
     function updateState() {
-        // Toggle the logic in content.js
-        // chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        //     const activeTab = tabs[0];
-        //     chrome.tabs.sendMessage(activeTab.id, { toggle: activated })
-        // });
-
         // Change the physical representation in the popup
-        if (activated) {
+        if (enabled) {
             header.classList.remove('off');
             header.classList.add('on');
             headerText.textContent = 'Activated :)';
@@ -37,10 +38,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     exportButton.addEventListener('click', () => {
-        // chrome.runtime.sendMessage({ action: 'toggleVariable' }, (response) => {
-        //     console.log('Variable isEnabled:', response.isEnabled); // Log the updated value
-        // });
-
         chrome.storage.local.get({ log: [] }, (result) => {
             const jsonBlob = new Blob([JSON.stringify(result.log, null, 2)], { type: 'application/json' });
 
@@ -54,9 +51,10 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // Load in state from last session
-    chrome.storage.local.get({ activated: false }, (result) => {
-        activated = result.activated;
+    chrome.storage.local.get({ enabled: false }, (result) => {
+        enabled = result.enabled;
+        console.log(`enabled ${enabled}`)
         updateState(); // Update header state after retrieving the 'activated' value
-        console.log("should only execute once");
     });
+
 });

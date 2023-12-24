@@ -9,9 +9,10 @@ const currentUrl = window.location.href;
 
 window.addEventListener('load', () => {
     // Load if the extension is activated or not
-    chrome.storage.local.get({ activated: false }, (result) => {
-        extensionEnabled = result.activated;
+    chrome.storage.local.get({ enabled: false }, (result) => {
+        extensionEnabled = result.enabled;
     });
+    console.log(`is enabled ${extensionEnabled}`);
 
     // Handle all URL cases starting with special cases
     if (currentUrl == "https://monkeytype.com/") {
@@ -31,6 +32,12 @@ window.addEventListener('beforeunload', () => {
         saveData();
     }
 })
+
+chrome.runtime.onMessage.addListener((message) => {
+    if (message.extensionEnabled !== undefined) {
+        extensionEnabled = message.extensionEnabled;
+    }
+});
 
 const saveData = async () => {
     try {
