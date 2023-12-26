@@ -5,7 +5,10 @@
     "description": "Capture keystroke data from typing-games! Kiakl isn't a keylogger... mostly.",
     "homepage_url": "https://github.com/sekaha/Kiakl",
     "icons": {
-        "720": "icon.png"
+        "128": "activated2.png"
+    },
+    "background": {
+        "service_worker": "background.js"
     },
     "content_scripts": [
         {
