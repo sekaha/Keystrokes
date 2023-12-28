@@ -6,19 +6,19 @@ let mtTimer = null;
 let mtActiveWord = null;
 const debug = true;
 const currentUrl = window.location.href;
-const validSite = window.
 
-    window.addEventListener('load', () => {
-        // Tell backgorund.js that a new tab is opened to be managed
-        chrome.runtime.sendMessage({ action: 'trackTab' })
+window.addEventListener('load', async () => {
+    // Tell backgorund.js that a new tab is opened to be managed
+    chrome.runtime.sendMessage({ action: 'trackTab' })
 
-        // Load if the extension is activated or not
-        chrome.storage.local.get({ enabled: false }, (result) => {
-            extensionEnabled = result.enabled;
-        });
+    // Load if the extension is activated or not
+    chrome.storage.local.get({ enabled: false }, (result) => {
+        extensionEnabled = result.enabled;
+    });
 
-        // Handle all URL cases starting with special cases
-        console.log(urlMatches("*monkeytype.com/*", currentUrl))
+    // Handle all URL cases starting with special cases (just monkeytype for now)
+    if (await isWhitelisted()) {
+        console.log("the fitness wig pacer test the fitness wig pacer testthe fitness wig pacer testthe fitness wig pacer testthe fitness wig pacer test");
 
         if (currentUrl == "https://monkeytype.com/") {
             // Check if the test ends
@@ -29,7 +29,8 @@ const validSite = window.
 
             mtRun();
         }
-    });
+    }
+});
 
 // Save data if the tab ends or is reloaded, this marks the end of a session (among other special conditions for typing games) 
 window.addEventListener('beforeunload', () => {
@@ -77,11 +78,20 @@ const saveData = async () => {
 async function isWhitelisted() {
     const { whitelist } = await chrome.storage.local.get({ whitelist: ['monkeytype.com'] });
 
+    for (const site of whitelist) {
+        if (urlMatches(site, currentUrl)) {
+            return true;
+        }
+    }
 
+    return false;
 }
 
 function urlMatches(parent, child) {
     match = RegExp(`${parent.replace(/\*/g, '.*')}`);
+
+    console.log(parent, child, match.test(child))
+
     return match.test(child);
 }
 
