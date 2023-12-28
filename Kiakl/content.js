@@ -2,41 +2,44 @@ let lastStrokeTime = 0
 let extensionEnabled = false;
 let started = false;
 let history = []
-const debug = true;
 let mtTimer = null;
 let mtActiveWord = null;
+const debug = true;
 const currentUrl = window.location.href;
+const validSite = window.
 
-window.addEventListener('load', () => {
-    // Tell backgorund.js that a new tab is opened to be managed
-    chrome.runtime.sendMessage({ contentScriptLoaded: true })
+    window.addEventListener('load', () => {
+        // Tell backgorund.js that a new tab is opened to be managed
+        chrome.runtime.sendMessage({ action: 'trackTab' })
 
-    // Load if the extension is activated or not
-    chrome.storage.local.get({ enabled: false }, (result) => {
-        extensionEnabled = result.enabled;
+        // Load if the extension is activated or not
+        chrome.storage.local.get({ enabled: false }, (result) => {
+            extensionEnabled = result.enabled;
+        });
+
+        // Handle all URL cases starting with special cases
+        console.log(urlMatches("*monkeytype.com/*", currentUrl))
+
+        if (currentUrl == "https://monkeytype.com/") {
+            // Check if the test ends
+            const observer = new MutationObserver(mtDivChecks);
+            const targetNode = document.getElementById('typingTest');
+            const config = { childList: true, subtree: true };
+            observer.observe(targetNode, config);
+
+            mtRun();
+        }
     });
-
-    console.log(`is enabled ${extensionEnabled}`);
-
-    // Handle all URL cases starting with special cases
-    if (currentUrl == "https://monkeytype.com/") {
-        // Check if the test ends
-        const observer = new MutationObserver(mtDivChecks);
-        const targetNode = document.getElementById('typingTest');
-        const config = { childList: true, subtree: true };
-        observer.observe(targetNode, config);
-
-        mtRun();
-    }
-});
 
 // Save data if the tab ends or is reloaded, this marks the end of a session (among other special conditions for typing games) 
 window.addEventListener('beforeunload', () => {
     if (extensionEnabled) {
         saveData();
+        chrome.runtime.sendMessage({ action: 'untrackTab' })
     }
 })
 
+// Get activation/deactivation messages
 chrome.runtime.onMessage.addListener((message) => {
     if (message.extensionEnabled !== undefined) {
         extensionEnabled = message.extensionEnabled;
@@ -69,6 +72,18 @@ const saveData = async () => {
 
     history = [];
 };
+
+// URL Matching
+async function isWhitelisted() {
+    const { whitelist } = await chrome.storage.local.get({ whitelist: ['monkeytype.com'] });
+
+
+}
+
+function urlMatches(parent, child) {
+    match = RegExp(`${parent.replace(/\*/g, '.*')}`);
+    return match.test(child);
+}
 
 // ** MONKEY TYPE ** //
 function mtRun() {
@@ -130,7 +145,7 @@ function mtDivChecks(mutationsList) {
 const pushKey = (key, duration) => {
     let correctness = false;
 
-    // Check if the key is correct or not
+    // Check if the key is correct or not by checking divs on monkeytype that reflect this
     if (key.length == 1) {
         if (key == " ") {
             let previousWord = mtActiveWord.previousElementSibling;

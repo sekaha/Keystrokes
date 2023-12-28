@@ -15,6 +15,8 @@
     --lilac: oklab(66.9%, -2.5%, -43.5%);
     --background: oklab(28.8%, 0.75%, -5.5%);
     --foreground: oklab(40.3%, 1%, -8%);
+    /* placeholder value*/
+    --highlight: oklab(0%, 0%, 0%);
     user-select: none;
 }
 
@@ -150,7 +152,7 @@ header.off:hover #switch {
 }
 
 textarea {
-    border-color: var(--foreground);
+    border: none;
     resize: none;
     font-family: monospace;
     font-weight: bold;
@@ -159,9 +161,21 @@ textarea {
     background-color: var(--foreground);
 }
 
+textarea:focus {
+    outline: 1px solid white;
+}
+
+textarea::selection {
+    background-color: var(--highlight);
+}
+
 #layout {
     word-break: break-all;
     letter-spacing: 0.5em;
+    border-radius: 3px;
+}
+
+#whitelist {
     border-radius: 3px;
 }
 
@@ -188,10 +202,27 @@ button.save {
 }
 
 button:hover {
-    background-color: var(--purple);
+    background-color: var(--highlight);
 }
 
 /* Style for headings */
 h2 {
     margin: 0.5em 0 0.5em 0;
+}
+
+/* Scrollbar */
+textarea::-webkit-scrollbar {
+    background-color: var(--foreground);
+    width: 10px;
+    height: 60px;
+    border-left: 2px solid var(--background);
+    border-top-right-radius: 3px;
+    border-bottom-right-radius: 3px;
+}
+
+textarea::-webkit-scrollbar-thumb {
+    background-color: var(--highlight);
+    border-left: 2px solid var(--background);
+    border-top-right-radius: 3px;
+    border-bottom-right-radius: 3px;
 }

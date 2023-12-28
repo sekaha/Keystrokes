@@ -2,11 +2,23 @@ document.addEventListener('DOMContentLoaded', function () {
     const header = document.getElementById('toggle');
     const headerText = header.querySelector('h1');
     const exportButton = document.getElementById('export');
+    const whitelistTextArea = document.getElementById('whitelist');
+    const layoutTextArea = document.getElementById('layout');
+    const submissionButton = document.getElementById('submission');
+    const submissionPageUrl = "https://forms.gle/rnjxrSd16K6q9Dry9";
+    const root = document.documentElement;
+
+    loadLayout();
+    loadWhitelist();
+
+    // Open submission page
+    submissionButton.addEventListener('click', async () => {
+        chrome.tabs.create({ url: submissionPageUrl });
+    });
 
     // Toggle the extension when the header is clicked
     header.addEventListener('click', async () => {
         enabled = !enabled;
-        chrome.runtime.sendMessage({ action: 'toggleExtension', extensionEnabled: enabled });
 
         chrome.storage.local.set({ enabled }, () => {
             // Update header state after toggling 'activated' and saving to storage
@@ -14,22 +26,41 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
+    async function loadLayout() {
+        // Load white list
+        const { layout } = await chrome.storage.local.get({ layout: ["`1234567890-=\n qwertyuiop[]\\\n  asdfghjkl;'\n   zxcvbnm,./"] });
+        layoutTextArea.value = layout;
+    }
+
+    async function loadWhitelist() {
+        // Load white list
+        const { whitelist } = await chrome.storage.local.get({ whitelist: ['monkeytype.com'] });
+        whitelistTextArea.value = whitelist.join('\n');
+    }
+
     // Function to update the header state based on the 'activated' variable
     function updateState() {
-        // Update content scripts too
+        // Update background script and content scripts too
+        chrome.runtime.sendMessage({ action: 'toggleExtension', extensionEnabled: enabled });
+        let newColor = null;
 
         // Change the physical representation in the popup
         if (enabled) {
             header.classList.remove('off');
             header.classList.add('on');
             headerText.textContent = 'Activated :)';
-            chrome.action.setIcon({ path: 'activated2.png' });
+            chrome.action.setIcon({ path: 'icon.png' });
+            newColor = "var(--cyan)";// "oklab(77.8%, -24.75%, -27%)";
         } else {
             header.classList.remove('on');
             header.classList.add('off');
             headerText.textContent = 'Deactivated :(';
-            chrome.action.setIcon({ path: 'deactivated2.png' });
+            chrome.action.setIcon({ path: 'deactivated.png' });
+            newColor = "var(--purple)";
         }
+
+        // Set highlight element colors
+        root.style.setProperty("--highlight", newColor);
     }
 
     // Export the data
