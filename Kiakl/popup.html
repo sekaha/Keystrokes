@@ -30,9 +30,24 @@
     <div id="wrapper">
         <!-- Layout section -->
         <h2>Layout</h2>
-        <textarea id="layout" placeholder="`1234567890-=&#10; qwertyuiop[]\&#10;  asdfghjkl;'&#10;   zxcvbnm,./"
-            rows="4" cols="33" spellcheck="false" maxlength="56"></textarea>
-        <button class="save">Save</button>
+        <textarea class="valid" id="layout" placeholder="`1234567890-=&#10;qwertyuiop[]\&#10;asdfghjkl;'&#10;zxcvbnm,./"
+            rows="4" cols="33" spellcheck="false" maxlength="50"></textarea>
+        <div id="layoutOptions">
+            <button disabled class="save">Save</button>
+
+            <div class="layoutSelect" tabindex="1">
+                <input name="options" class="layoutOption" type="radio" id="anglemod" checked>
+                <label for="anglemod" class="layoutOption">Anglemod</label>
+
+                <input name="options" class="layoutOption" type="radio" id="ortholinear">
+                <label for="ortholinear" class="layoutOption">Ortholinear</label>
+
+                <input name="options" class="layoutOption" type="radio" id="rowStagger">
+                <label for="rowStagger" class="layoutOption">Row Stagger</label>
+            </div>
+        </div>
+
+
         <hr>
 
         <!-- Whitelist section -->

@@ -7,6 +7,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const submissionButton = document.getElementById('submission');
     const submissionPageUrl = "https://forms.gle/rnjxrSd16K6q9Dry9";
     const root = document.documentElement;
+    let isSaved = false;
+    let isValid = false;
 
     loadLayout();
     loadWhitelist();
@@ -27,8 +29,11 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     async function loadLayout() {
+        isSaved = await chrome.storage.local.get({ isSaved: true });
+        isValid = await chrome.storage.local.get({ isSaved: true });
+
         // Load white list
-        const { layout } = await chrome.storage.local.get({ layout: ["`1234567890-=\n qwertyuiop[]\\\n  asdfghjkl;'\n   zxcvbnm,./"] });
+        const { layout } = await chrome.storage.local.get({ layout: ["`1234567890-=\nqwertyuiop[]\\\nasdfghjkl;'\nzxcvbnm,./"] });
         layoutTextArea.value = layout;
     }
 
@@ -85,3 +90,19 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
 });
+
+/////////////////
+///// Utils /////
+/////////////////
+
+layout = "`1234567890-=\n qwertyuiop[]\\\n  asdfghjkl;'\n   zxcvbnm,./";
+
+function getLayoutType(layout) {
+    lines = layout.split("\n");
+
+    if (lines.length == 4) {
+
+    }
+
+    return "invalid";
+}

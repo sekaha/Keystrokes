@@ -12,6 +12,8 @@
     --purple: oklab(52.6%, 33.75%, -61.5%);
     --blue: oklab(50.2%, -7.25%, -69.5%);
     --cyan: oklab(77.8%, -24.75%, -27%);
+    --green: oklab(87.23%, -21.34%, 13.2%);
+    --red: oklab(64.77%, 26.26%, 0%);
     --lilac: oklab(66.9%, -2.5%, -43.5%);
     --background: oklab(28.8%, 0.75%, -5.5%);
     --foreground: oklab(40.3%, 1%, -8%);
@@ -161,6 +163,14 @@ textarea {
     background-color: var(--foreground);
 }
 
+textarea.invalid {
+    outline: 1px solid var(--red);
+}
+
+textarea.valid {
+    outline: 1px solid var(--green);
+}
+
 textarea:focus {
     outline: 1px solid white;
 }
@@ -205,6 +215,13 @@ button:hover {
     background-color: var(--highlight);
 }
 
+button:disabled {
+    opacity: 0.6;
+    background-color: var(--foreground);
+    color: rgba(255, 255, 255, 0.5);
+    cursor: auto;
+}
+
 /* Style for headings */
 h2 {
     margin: 0.5em 0 0.5em 0;
@@ -215,14 +232,107 @@ textarea::-webkit-scrollbar {
     background-color: var(--foreground);
     width: 10px;
     height: 60px;
-    border-left: 2px solid var(--background);
+    border-left: 1px solid var(--background);
     border-top-right-radius: 3px;
     border-bottom-right-radius: 3px;
 }
 
 textarea::-webkit-scrollbar-thumb {
     background-color: var(--highlight);
-    border-left: 2px solid var(--background);
+    border-left: 1px solid var(--background);
     border-top-right-radius: 3px;
     border-bottom-right-radius: 3px;
 }
+
+textarea:focus::-webkit-scrollbar {
+    border-left: 1px solid white;
+}
+
+textarea:focus::-webkit-scrollbar-thumb {
+    border-left: 1px solid white;
+}
+
+
+/* Style for select */
+#layoutOptions {
+    display: flex;
+    margin: 0;
+    padding: 0;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 0;
+    margin: 0;
+}
+
+.layoutSelect {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    width: 100px;
+    height: 40px;
+}
+
+.layoutOption {
+    padding: 0 30px 0 10px;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    background: #333;
+    border-top: #222 solid 1px;
+    top: 0;
+    width: 100%;
+    pointer-events: none;
+    order: 2;
+    z-index: 1;
+    box-sizing: border-box;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.layoutOption:hover {
+    background: #666;
+}
+
+.layoutSelect:focus .layoutOption {
+    pointer-events: all;
+}
+
+input {
+    opacity: 0;
+    position: absolute;
+    left: -99999px;
+}
+
+
+input:checked+label {
+    order: 1;
+    z-index: 2;
+    background: #666;
+    border-top: none;
+    position: relative;
+}
+
+
+input:checked+label:after {
+    content: '';
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid white;
+    position: absolute;
+    right: 10px;
+    top: calc(50%);
+    pointer-events: none;
+    z-index: 3;
+}
+
+/*
+input:checked+label:before {
+    position: absolute;
+    right: 0;
+    height: 40px;
+    width: 40px;
+    content: '';
+    background: #666;
+}*/

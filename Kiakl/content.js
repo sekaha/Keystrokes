@@ -52,26 +52,28 @@ chrome.runtime.onMessage.addListener((message) => {
 });
 
 const saveData = async () => {
-    started = false;
+    if (await isWhitelisted()) {
+        started = false;
 
-    if (!chrome || !chrome.storage || !chrome.storage.local) {
-        console.error('chrome.storage.local is not available, please wait for the extension to intialize fully');
-        return;
+        if (!chrome || !chrome.storage || !chrome.storage.local) {
+            console.error('chrome.storage.local is not available, please wait for the extension to intialize fully');
+            return;
+        }
+
+        const session = {
+            website: currentUrl,
+            sessionID: Date.now(),
+            data: history
+        };
+
+        const { log } = await chrome.storage.local.get({ log: [] });
+        console.log(log);
+        log.push(session);
+
+        await chrome.storage.local.set({ log });
+
+        history = [];
     }
-
-    const session = {
-        website: currentUrl,
-        sessionID: Date.now(),
-        data: history
-    };
-
-    const { log } = await chrome.storage.local.get({ log: [] });
-    console.log(log);
-    log.push(session);
-
-    await chrome.storage.local.set({ log });
-
-    history = [];
 };
 
 // URL Matching
