@@ -52,7 +52,7 @@ body {
             oklab(62.8%, 56.25%, 31.5%));
     position: absolute;
     left: -10px;
-    bottom: 312px;
+    bottom: calc(99.5vh - 64px);
     background-size: 400%;
     z-index: -1;
     filter: blur(5px);
@@ -77,7 +77,7 @@ body {
             oklab(62.8%, 56.25%, 31.5%));
     position: absolute;
     left: -10px;
-    top: 376px;
+    top: 99.5vh;
     background-size: 400%;
     z-index: -1;
     filter: blur(5px);
@@ -155,18 +155,21 @@ header.off:hover #switch {
 }
 
 textarea {
+    margin: 0;
     border: none;
     resize: none;
     font-family: monospace;
     font-weight: bold;
     color: white;
-    width: calc(100% - 0.5em);
+    width: 230px;
+    max-width: 230px;
+    border-radius: 3px;
     background-color: var(--foreground);
 }
 
 textarea.invalid,
 textarea.invalid:focus {
-    box-shadow: inset 0 0 0 1px var(--red);
+    outline: 1px solid var(--red);
 }
 
 textarea.valid,
@@ -182,14 +185,38 @@ textarea::selection {
     background-color: var(--highlight);
 }
 
-#layout {
-    word-break: break-all;
-    letter-spacing: 0.5em;
-    border-radius: 3px;
+#mainContainer,
+#shiftContainer {
+    margin: 0 0 0 0;
+    width: 230px;
+    height: 64px;
+    position: relative;
 }
 
-#whitelist {
-    border-radius: 3px;
+#mainContainer {
+    margin: 0 0 7px 0;
+}
+
+.onion {
+    z-index: 0;
+    pointer-events: none;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.onion,
+#layoutMain,
+#layoutShift {
+    letter-spacing: 0.5em;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+#layoutMain,
+#layoutShift {
+    z-index: 1;
+    word-break: break-all;
+    background-color: transparent;
 }
 
 hr {
@@ -202,7 +229,7 @@ hr {
 button {
     font-family: 'Inter var', sans-serif;
     font-weight: bold;
-    margin: 0.5em 0.5em 0.5em 0;
+    margin: 7px 7px 7px 0;
     padding: 0.4em 1em;
     background-color: var(--foreground);
     color: white;
@@ -220,7 +247,7 @@ button:hover {
 }
 
 button:disabled {
-    opacity: 0.6;
+    /*opacity: 0.6;*/
     background-color: var(--foreground);
     color: rgba(255, 255, 255, 0.5);
     cursor: auto;
@@ -267,13 +294,14 @@ textarea:focus::-webkit-scrollbar-thumb {
 }
 
 .layoutSelect {
+    margin: 0;
     font-weight: bold;
     font-size: 13.333333333px;
     display: flex;
     flex-direction: column;
     position: relative;
-    width: calc(100% - 52px);
-    height: 21px;
+    width: calc(100% - 51.5px);
+    height: 20px;
 }
 
 .layoutOption {
@@ -311,7 +339,7 @@ textarea:focus::-webkit-scrollbar-thumb {
 }
 
 input {
-    opacity: 0;
+    opacity: 100;
     position: absolute;
     left: -99999px;
 }
@@ -319,7 +347,6 @@ input {
 input:checked+label {
     order: 1;
     z-index: 2;
-    border-top: none;
     position: relative;
 }
 

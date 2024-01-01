@@ -30,23 +30,34 @@
     <div id="wrapper">
         <!-- Layout section -->
         <h2>Layout</h2>
-        <textarea class="invalid" id="layout"
-            placeholder="`1234567890-=&#10;qwertyuiop[]\&#10;asdfghjkl;'&#10;zxcvbnm,./" rows="4" cols="33"
-            spellcheck="false" maxlength="50"></textarea>
         <div id="layoutOptions">
-            <button disabled class="save">Save</button>
+            <div id="mainContainer">
+                <textarea id="layoutMainOnion" class="onion" rows="4" cols="33"
+                    maxlength="50">`1234567890-=&#10;qwertyuiop[]\&#10;asdfghjkl;'&#10;zxcvbnm,./</textarea>
+                <textarea id="layoutMain" placeholder="`1234567890-=&#10;qwertyuiop[]\&#10;asdfghjkl;'&#10;zxcvbnm,./"
+                    rows="4" cols="33" spellcheck="false" maxlength="50"></textarea>
+            </div>
+
+            <div id="shiftContainer">
+                <textarea id="layoutShiftOnion" class="onion" rows="4" cols="33" maxlength="50"></textarea>
+                <textarea id="layoutShift"
+                    placeholder="~!@#$%^&*()_+&#10;QWERTYUIOP{}|&#10;ASDFGHJKL:&quot;&#10;ZXCVBNM&lt;>?" rows="4"
+                    cols="33" spellcheck="false" maxlength="50"></textarea>
+            </div>
+
+            <button disabled id="saveLayout" class="save">Save</button>
 
             <div class="layoutSelect" tabindex="1">
                 <!--<input name="options" class="layoutOption" type="radio" id="save" checked>
                 <label for="save" class="layoutOption">Save</label>-->
 
-                <input name="options" class="layoutOption" type="radio" id="anglemod" checked>
-                <label for="anglemod" class="layoutOption">Anglemod</label>
+                <input name="options" class="layoutOption" type="radio" id="angleMod">
+                <label for="angleMod" class="layoutOption" value="Angled">Angle Mod</label>
 
                 <input name="options" class="layoutOption" type="radio" id="ortholinear">
-                <label for="ortholinear" class="layoutOption">Ortholinear</label>
+                <label for="ortholinear" class="layoutOption" value=>Ortholinear</label>
 
-                <input name="options" class="layoutOption" type="radio" id="rowStagger">
+                <input name="options" class="layoutOption" type="radio" id="rowStagger" checked>
                 <label for="rowStagger" class="layoutOption">Row Stagger</label>
             </div>
         </div>
