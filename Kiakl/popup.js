@@ -1,7 +1,4 @@
 // Variables
-let isSaved = false;
-let isValid = false;
-let isValidTemp = false;
 const submissionPageUrl = "https://forms.gle/rnjxrSd16K6q9Dry9";
 const defaultMain = "`1234567890-=\nqwertyuiop[]\\\nasdfghjkl;'\nzxcvbnm,./";
 const defaultShift = "~!@#$%^&*()_+\nQWERTYUIOP{}|\nASDFGHJKL:\"\nZXCVBNM<>?"

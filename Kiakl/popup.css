@@ -178,11 +178,15 @@ textarea.valid:focus {
 }
 
 textarea:focus {
-    outline: 1px solid white;
+    outline: none;
 }
 
 textarea::selection {
     background-color: var(--highlight);
+}
+
+#layoutMain:focus~#layoutMainOnion {
+    outline: 1px solid white;
 }
 
 #mainContainer,
@@ -214,6 +218,7 @@ textarea::selection {
 
 #layoutMain,
 #layoutShift {
+    width: 194px;
     z-index: 1;
     word-break: break-all;
     background-color: transparent;
