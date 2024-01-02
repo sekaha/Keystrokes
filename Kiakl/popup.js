@@ -139,20 +139,37 @@ function handleLayoutInput(defaultText, textArea, onionTextArea) {
 
 // Update layout text area based on input to include line breaks when max line length is reached
 function enforceBreaks(textArea) {
+    let cursorPos = textArea.selectionStart;
     let newText = '';
     let unbrokenStreak = 0;
+    let doubleBreakCheck = false;
     let breaks = 0;
 
     for (let char of textArea.value) {
         if (char !== '\n') {
+            doubleBreak = false;
             unbrokenStreak++;
         } else {
             unbrokenStreak = 0;
             breaks++;
+
+            // Reject two breaks in a row
+            if (doubleBreakCheck) {
+                continue;
+            }
         }
 
         if (unbrokenStreak === maxRowLengths[breaks] + 1) {
+            const checkSpot = maxRowLengths.slice(0, breaks + 1).reduce((a, b) => a + b, 0) + 1
+
+            console.log(cursorPos, checkSpot)
+            if (cursorPos == (checkSpot)) {
+                cursorPos += 1;
+                console.log("cap")
+            }
+
             newText += '\n';
+            doubleBreakCheck = true;
             breaks++;
         }
 
@@ -162,6 +179,9 @@ function enforceBreaks(textArea) {
     }
 
     textArea.value = newText;
+
+    // Make sure if a line break or new character was inserted, it doesn't jump the char to the end of the line
+    textArea.setSelectionRange(cursorPos, cursorPos);
 }
 
 // Create a backdrop (onion) to show changed text from default QWERTY
