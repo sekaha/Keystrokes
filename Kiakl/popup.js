@@ -144,6 +144,7 @@ function enforceBreaks(textArea) {
     let unbrokenStreak = 0;
     let doubleBreakCheck = false;
     let breaks = 0;
+    const specialPoints = [14, 28, 40];
 
     for (let char of textArea.value) {
         if (char !== '\n') {
@@ -160,14 +161,10 @@ function enforceBreaks(textArea) {
         }
 
         if (unbrokenStreak === maxRowLengths[breaks] + 1) {
-            const checkSpot = maxRowLengths.slice(0, breaks + 1).reduce((a, b) => a + b, 0) + 1
-
-            console.log(cursorPos, checkSpot)
-            if (cursorPos == (checkSpot)) {
+            console.log(cursorPos);
+            if (specialPoints.includes(cursorPos)) {
                 cursorPos += 1;
-                console.log("cap")
             }
-
             newText += '\n';
             doubleBreakCheck = true;
             breaks++;
