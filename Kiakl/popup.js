@@ -139,8 +139,8 @@ function toggleExtension() {
 
 // Handling input in layout text areas
 function handleLayoutInput(layout) {
-    updateLayoutGUI(layout);
     enforceBreaks(layout);
+    updateLayoutGUI(layout);
     updateSavability();
 
     // Save temporary variables
@@ -174,14 +174,14 @@ function enforceBreaks(layout) {
 
         // Auto break at breakinteval
         if (unbrokenStreak === maxRowLengths[breaks] + 1) {
-            // If the cursor is at the edge, when a \n is added it'll offset stuff, so that needs to be readjusted
-            if (specialPoints.includes(cursorPos)) {
-                cursorPos += 1;
-            }
-
             // Don't allow more than 4 lines of text via overflow
             if (breaks == (maxRowLengths.length - 1)) {
                 break;
+            }
+
+            // If the cursor is at the edge, when a \n is added it'll offset stuff, so that needs to be readjusted
+            if (specialPoints.includes(cursorPos)) {
+                cursorPos += 1;
             }
 
             newText += '\n';
@@ -192,6 +192,9 @@ function enforceBreaks(layout) {
         // Don't allow the user to insert more than 4 breaks
         if (!((char === '\n') && (breaks >= maxRowLengths.length))) {
             newText += char;
+        } else {
+            // This makes sure the cursor isn't moved forward by 1, this should simply just reject the user's enter
+            cursorPos -= 1;
         }
     }
 
