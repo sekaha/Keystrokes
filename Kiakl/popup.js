@@ -5,11 +5,13 @@ const maxRowLengths = [13, 13, 11, 10];
 const layouts = {
     main: {
         defaultText: "`1234567890-=\nqwertyuiop[]\\\nasdfghjkl;'\nzxcvbnm,./",
+        prevText: undefined,
         textArea: undefined,
         onion: undefined
     },
     shift: {
         defaultText: "~!@#$%^&*()_+\nQWERTYUIOP{}|\nASDFGHJKL:\"\nZXCVBNM<>?",
+        prevText: undefined,
         textArea: undefined,
         onion: undefined
     }
@@ -101,16 +103,18 @@ async function loadInitialData() {
     savedMainLayout = result.savedMainLayout;
     tempMainLayout = result.tempMainLayout;
     layouts.main.textArea.value = tempMainLayout;
+    layouts.main.prevText = tempMainLayout;
 
     savedShiftLayout = result.savedShiftLayout;
     tempShiftLayout = result.tempShiftLayout;
     layouts.shift.textArea.value = tempShiftLayout;
+    layouts.shift.prevText = tempShiftLayout;
 
     savedLayoutType = result.savedLayoutType;
     tempLayoutType = result.tempLayoutType;
 
     // Update radio buttons
-    let selectedOption = document.getElementById(tempLayoutType);
+    const selectedOption = document.getElementById(tempLayoutType);
     console.log(selectedOption)
     selectedOption.checked = true;
 
@@ -140,8 +144,13 @@ function toggleExtension() {
 // Handling input in layout text areas
 function handleLayoutInput(layout) {
     enforceBreaks(layout);
+
+    // Cheap fix I'll just accept for now
+    enforceBreaks(layout);
     updateLayoutGUI(layout);
     updateSavability();
+
+    layout.prevText = layout.textArea.value;
 
     // Save temporary variables
     chrome.storage.local.set({ tempMainLayout });
@@ -150,6 +159,7 @@ function handleLayoutInput(layout) {
 }
 
 // Update layout text area based on input to include line breaks when max line length is reached
+// Returns bool of if error free
 function enforceBreaks(layout) {
     let cursorPos = layout.textArea.selectionStart;
     let newText = '';
@@ -157,6 +167,13 @@ function enforceBreaks(layout) {
     let doubleBreakCheck = false;
     let breaks = 0;
     const specialPoints = [14, 28, 40];
+
+    function reject() {
+        console.log("rejected")
+        layout.textArea.value = layout.prevText;
+        console.log(layout.prevText)
+        layout.textArea.setSelectionRange(cursorPos, cursorPos);
+    }
 
     for (let char of layout.textArea.value) {
         if (char !== '\n') {
@@ -176,7 +193,8 @@ function enforceBreaks(layout) {
         if (unbrokenStreak === maxRowLengths[breaks] + 1) {
             // Don't allow more than 4 lines of text via overflow
             if (breaks == (maxRowLengths.length - 1)) {
-                break;
+                reject();
+                return false;
             }
 
             // If the cursor is at the edge, when a \n is added it'll offset stuff, so that needs to be readjusted
@@ -186,6 +204,7 @@ function enforceBreaks(layout) {
 
             newText += '\n';
             doubleBreakCheck = true;
+            unbrokenStreak = 0;
             breaks++;
         }
 
@@ -202,6 +221,8 @@ function enforceBreaks(layout) {
 
     // Make sure if a line break or new character was inserted, it doesn't jump the char to the end of the line
     layout.textArea.setSelectionRange(cursorPos, cursorPos);
+    console.log('unrejected');
+    return true;
 }
 
 function updateLayoutGUI(layout) {
@@ -276,19 +297,15 @@ function updateSavability() {
 function updateState() {
     chrome.runtime.sendMessage({ action: 'toggleExtension', extensionEnabled: enabled });
 
-    if (enabled) {
-        header.classList.remove('off');
-        header.classList.add('on');
-        headerText.textContent = 'Activated :)';
-        chrome.action.setIcon({ path: 'icon.png' });
-        root.style.setProperty("--highlight", "var(--cyan)");
-    } else {
-        header.classList.remove('on');
-        header.classList.add('off');
-        headerText.textContent = 'Deactivated :(';
-        chrome.action.setIcon({ path: 'deactivated.png' });
-        root.style.setProperty("--highlight", "var(--purple)");
-    }
+    const iconPath = enabled ? 'icon.png' : 'deactivated.png';
+    const textContent = enabled ? 'Activated :)' : 'Deactivated :(';
+    const highlightColor = enabled ? 'var(--cyan)' : 'var(--purple)';
+
+    header.classList.remove(enabled ? 'off' : 'on');
+    header.classList.add(enabled ? 'on' : 'off');
+    headerText.textContent = textContent;
+    chrome.action.setIcon({ path: iconPath });
+    root.style.setProperty("--highlight", highlightColor);
 }
 
 function updateValidity(layout) {

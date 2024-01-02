@@ -155,6 +155,7 @@ header.off:hover #switch {
 }
 
 textarea {
+    padding: 2px;
     margin: 0;
     border: none;
     resize: none;
@@ -192,7 +193,8 @@ textarea.invalid:focus {
 }
 
 #mainContainer,
-#shiftContainer {
+#shiftContainer,
+#whitelistContainer {
     margin: 0 0 0 0;
     width: 230px;
     height: 64px;
@@ -204,15 +206,16 @@ textarea.invalid:focus {
 }
 
 .onion {
+    letter-spacing: 0.5em;
     z-index: 0;
     pointer-events: none;
     color: rgba(255, 255, 255, 0.5);
 }
 
 .onion,
+#whitelist,
 #layoutMain,
 #layoutShift {
-    letter-spacing: 0.5em;
     position: absolute;
     top: 0;
     left: 0;
@@ -220,6 +223,7 @@ textarea.invalid:focus {
 
 #layoutMain,
 #layoutShift {
+    letter-spacing: 0.5em;
     z-index: 1;
     word-break: break-all;
     background-color: transparent;

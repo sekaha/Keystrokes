@@ -45,9 +45,6 @@
             <button disabled id="saveLayout" class="save">Save</button>
 
             <div class="layoutSelect" tabindex="1">
-                <!--<input name="options" class="layoutOption" type="radio" id="save" checked>
-                <label for="save" class="layoutOption">Save</label>-->
-
                 <input name="options" class="layoutOption" type="radio" id="angleMod">
                 <label for="angleMod" class="layoutOption" value="Angled">Angle Mod</label>
 
@@ -64,7 +61,9 @@
 
         <!-- Whitelist section -->
         <h2>Whitelist</h2>
-        <textarea id="whitelist" placeholder="https://monkeytype.com/" spellcheck="false" rows="4"></textarea>
+        <div id="whitelistContainer">
+            <textarea id="whitelist" placeholder="https://monkeytype.com/" spellcheck="false" rows="4"></textarea>
+        </div>
         <button class="save">Save</button>
         <hr>
 
