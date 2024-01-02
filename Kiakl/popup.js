@@ -2,6 +2,7 @@
 const submissionPageUrl = "https://forms.gle/rnjxrSd16K6q9Dry9";
 const defaultMain = "`1234567890-=\nqwertyuiop[]\\\nasdfghjkl;'\nzxcvbnm,./";
 const defaultShift = "~!@#$%^&*()_+\nQWERTYUIOP{}|\nASDFGHJKL:\"\nZXCVBNM<>?"
+const maxRowLengths = [13, 13, 11, 10];
 
 let savedMainLayout, tempMainLayout, savedShiftLayout, tempShiftLayout, tempLayoutType, savedLayoutType;
 let layoutMainTextArea, layoutShiftTextArea, whitelistTextArea;
@@ -42,12 +43,12 @@ function setupEventListeners() {
         toggleExtension();
     });
 
-    layoutShiftTextArea.addEventListener('input', () => {
-        handleLayoutInput();
+    layoutMainTextArea.addEventListener('input', () => {
+        handleLayoutInput(defaultMain, layoutMainTextArea, layoutMainOnion);
     });
 
-    layoutMainTextArea.addEventListener('input', () => {
-        handleLayoutInput();
+    layoutShiftTextArea.addEventListener('input', () => {
+        handleLayoutInput(defaultShift, layoutShiftTextArea, layoutShiftOnion);
     });
 
     options.forEach((option) => {
@@ -104,7 +105,7 @@ async function loadInitialData() {
     selectedOption.checked = true;
 
     // Update GUI accordingly
-    handleLayoutInput();
+    updateSavability();
 
     // Load in the whitelist
     const { whitelist } = await chrome.storage.local.get({ whitelist: ['monkeytype.com'] });
@@ -125,31 +126,78 @@ function toggleExtension() {
 }
 
 // Handling input in layout text areas
-function handleLayoutInput() {
-    let isSavable = false;
-    mapToQwerty();
+function handleLayoutInput(defaultText, textArea, onionTextArea) {
+    enforceBreaks(textArea);
+    updateOnion(defaultText, textArea, onionTextArea);
+    updateSavability();
 
-    // Make a backdrop to show what text has been changed from QWERTY
-    requestAnimationFrame(async () => {
-        mainLines = tempMainLayout.split("\n");
-        defaultMainLines = defaultMain.split("\n");
-        onion = [];
+    // Save temporary variables
+    chrome.storage.local.set({ tempMainLayout });
+    chrome.storage.local.set({ tempShiftLayout });
+    chrome.storage.local.set({ tempLayoutType });
+}
 
-        for (let i = 0; i < defaultMainLines.length; i++) {
-            // Show the onion layer but only the keys that are relevant
-            if (i < mainLines.length) {
-                size = mainLines[i].length;
-            } else {
-                size = 0;
-            }
+// Update layout text area based on input to include line breaks when max line length is reached
+function enforceBreaks(textArea) {
+    let newText = '';
+    let unbrokenStreak = 0;
+    let breaks = 0;
 
-            onion.push(" ".repeat(size) + defaultMainLines[i].substring(size));
-            layoutMainOnion.value = onion.join("\n");
+    for (let char of textArea.value) {
+        if (char !== '\n') {
+            unbrokenStreak++;
+        } else {
+            unbrokenStreak = 0;
+            breaks++;
         }
-    });
 
+        if (unbrokenStreak === maxRowLengths[breaks] + 1) {
+            newText += '\n';
+            breaks++;
+        }
 
-    // Checking if the textboxes have changed
+        if (!((char === '\n') && (breaks >= maxRowLengths.length))) {
+            newText += char;
+        }
+    }
+
+    textArea.value = newText;
+}
+
+// Create a backdrop (onion) to show changed text from default QWERTY
+function updateOnion(defaultText, textArea, onionTextArea) {
+    const mainLines = textArea.value.split('\n');
+    const defaultLines = defaultText.split('\n');
+    const onion = [];
+
+    for (let i = 0; i < defaultLines.length; i++) {
+        if (i < mainLines.length) {
+            onion.push('');
+
+            for (let j = 0; j < defaultLines[i].length; j++) {
+                if (j < mainLines[i].length) {
+                    if (mainLines[i].charAt(j) !== ' ') {
+                        onion[i] += ' ';
+                    } else {
+                        onion[i] += defaultLines[i].charAt(j);
+                    }
+                } else {
+                    onion[i] += defaultLines[i].substring(mainLines[i].length);
+                    break;
+                }
+            }
+        } else {
+            onion.push(defaultLines[i]);
+        }
+    }
+
+    onionTextArea.value = onion.join('\n');
+}
+
+// Check for changes in textboxes and layout type to determine savability
+function updateSavability() {
+    let isSavable = false;
+
     if (layoutMainTextArea.value !== savedMainLayout) {
         tempMainLayout = layoutMainTextArea.value;
         isSavable = true;
@@ -160,12 +208,11 @@ function handleLayoutInput() {
         isSavable = true;
     }
 
-    // Checking if layout type has changed
     for (let option of options) {
         if (option.checked) {
             tempLayoutType = option.id;
 
-            if (tempLayoutType != savedLayoutType) {
+            if (tempLayoutType !== savedLayoutType) {
                 isSavable = true;
             }
 
@@ -173,30 +220,11 @@ function handleLayoutInput() {
         }
     }
 
-    // If there have been any changes, then a new version is savable
     if (isSavable) {
         layoutSaveButton.removeAttribute('disabled');
     } else {
         layoutSaveButton.setAttribute('disabled', true);
     }
-
-    // Save all the temp variables so that if the window closes the user doesn't have to restart
-    chrome.storage.local.set({ tempMainLayout });
-    chrome.storage.local.set({ tempShiftLayout });
-    chrome.storage.local.set({ tempLayoutType });
-}
-
-// Function to export data
-function exportData() {
-    chrome.storage.local.get({ log: [] }, (result) => {
-        const jsonBlob = new Blob([JSON.stringify(result.log, null, 2)], { type: 'application/json' });
-
-        chrome.downloads.download({
-            url: URL.createObjectURL(jsonBlob),
-            filename: "typingdata.json",
-            saveAs: true
-        });
-    });
 }
 
 // Function to update extension state
