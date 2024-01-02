@@ -165,11 +165,7 @@ textarea {
     max-width: 230px;
     border-radius: 3px;
     background-color: var(--foreground);
-}
-
-textarea.invalid,
-textarea.invalid:focus {
-    outline: 1px solid var(--red);
+    transition: outline-color 0.1s ease-in-out;
 }
 
 textarea.valid,
@@ -185,8 +181,14 @@ textarea::selection {
     background-color: var(--highlight);
 }
 
-#layoutMain:focus~#layoutMainOnion {
+#layoutMain:not(.invalid):focus,
+#layoutShift:not(.invalid):focus {
     outline: 1px solid white;
+}
+
+textarea.invalid,
+textarea.invalid:focus {
+    outline: 1px solid var(--red);
 }
 
 #mainContainer,

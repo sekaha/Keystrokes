@@ -1,12 +1,22 @@
 // Variables
 const submissionPageUrl = "https://forms.gle/rnjxrSd16K6q9Dry9";
-const defaultMain = "`1234567890-=\nqwertyuiop[]\\\nasdfghjkl;'\nzxcvbnm,./";
-const defaultShift = "~!@#$%^&*()_+\nQWERTYUIOP{}|\nASDFGHJKL:\"\nZXCVBNM<>?"
 const maxRowLengths = [13, 13, 11, 10];
 
+const layouts = {
+    main: {
+        defaultText: "`1234567890-=\nqwertyuiop[]\\\nasdfghjkl;'\nzxcvbnm,./",
+        textArea: undefined,
+        onion: undefined
+    },
+    shift: {
+        defaultText: "~!@#$%^&*()_+\nQWERTYUIOP{}|\nASDFGHJKL:\"\nZXCVBNM<>?",
+        textArea: undefined,
+        onion: undefined
+    }
+}
+
 let savedMainLayout, tempMainLayout, savedShiftLayout, tempShiftLayout, tempLayoutType, savedLayoutType;
-let layoutMainTextArea, layoutShiftTextArea, whitelistTextArea;
-let layoutMainOnion, layoutShiftOnion
+let whitelistTextArea;
 let root, headerText, header, exportButton, submissionButton, layoutSaveButton;
 
 // DOMContentLoaded Event Listener
@@ -21,10 +31,10 @@ function initializeVariables() {
     // Assigning DOM elements to variables
     header = document.getElementById('toggle');
     exportButton = document.getElementById('export');
-    layoutMainTextArea = document.getElementById('layoutMain');
-    layoutShiftTextArea = document.getElementById('layoutShift');
-    layoutMainOnion = document.getElementById('layoutMainOnion');
-    layoutShiftOnion = document.getElementById('layoutShiftOnion');
+    layouts.main.textArea = document.getElementById('layoutMain');
+    layouts.shift.textArea = document.getElementById('layoutShift');
+    layouts.main.onion = document.getElementById('layoutMainOnion');
+    layouts.shift.onion = document.getElementById('layoutShiftOnion');
     submissionButton = document.getElementById('submission');
     layoutSaveButton = document.getElementById('saveLayout');
     options = document.getElementsByName('options');
@@ -43,16 +53,16 @@ function setupEventListeners() {
         toggleExtension();
     });
 
-    layoutMainTextArea.addEventListener('input', () => {
-        handleLayoutInput(defaultMain, layoutMainTextArea, layoutMainOnion);
+    layouts.main.textArea.addEventListener('input', () => {
+        handleLayoutInput(layouts.main);
     });
 
-    layoutShiftTextArea.addEventListener('input', () => {
-        handleLayoutInput(defaultShift, layoutShiftTextArea, layoutShiftOnion);
+    layouts.shift.textArea.addEventListener('input', () => {
+        handleLayoutInput(layouts.shift);
     });
 
     options.forEach((option) => {
-        option.addEventListener('click', handleLayoutInput)
+        option.addEventListener('click', updateSavability)
     })
 
     exportButton.addEventListener('click', () => {
@@ -79,10 +89,10 @@ function saveLayout() {
 // Loading initial data from local storage
 async function loadInitialData() {
     const result = await chrome.storage.local.get({
-        savedMainLayout: defaultMain,
-        tempMainLayout: defaultMain,
-        savedShiftLayout: defaultShift,
-        tempShiftLayout: defaultShift,
+        savedMainLayout: layouts.main.defaultText,
+        tempMainLayout: layouts.main.defaultText,
+        savedShiftLayout: layouts.shift.defaultText,
+        tempShiftLayout: layouts.shift.defaultText,
         savedLayoutType: "rowStagger",
         tempLayoutType: "rowStagger"
     });
@@ -90,11 +100,11 @@ async function loadInitialData() {
     // Assigning values from local storage to variables
     savedMainLayout = result.savedMainLayout;
     tempMainLayout = result.tempMainLayout;
-    layoutMainTextArea.value = tempMainLayout;
+    layouts.main.textArea.value = tempMainLayout;
 
     savedShiftLayout = result.savedShiftLayout;
     tempShiftLayout = result.tempShiftLayout;
-    layoutShiftTextArea.value = tempShiftLayout;
+    layouts.shift.textArea.value = tempShiftLayout;
 
     savedLayoutType = result.savedLayoutType;
     tempLayoutType = result.tempLayoutType;
@@ -105,6 +115,8 @@ async function loadInitialData() {
     selectedOption.checked = true;
 
     // Update GUI accordingly
+    updateLayoutGUI(layouts.main);
+    updateLayoutGUI(layouts.shift);
     updateSavability();
 
     // Load in the whitelist
@@ -126,9 +138,9 @@ function toggleExtension() {
 }
 
 // Handling input in layout text areas
-function handleLayoutInput(defaultText, textArea, onionTextArea) {
-    enforceBreaks(textArea);
-    updateOnion(defaultText, textArea, onionTextArea);
+function handleLayoutInput(layout) {
+    updateLayoutGUI(layout);
+    enforceBreaks(layout);
     updateSavability();
 
     // Save temporary variables
@@ -138,15 +150,15 @@ function handleLayoutInput(defaultText, textArea, onionTextArea) {
 }
 
 // Update layout text area based on input to include line breaks when max line length is reached
-function enforceBreaks(textArea) {
-    let cursorPos = textArea.selectionStart;
+function enforceBreaks(layout) {
+    let cursorPos = layout.textArea.selectionStart;
     let newText = '';
     let unbrokenStreak = 0;
     let doubleBreakCheck = false;
     let breaks = 0;
     const specialPoints = [14, 28, 40];
 
-    for (let char of textArea.value) {
+    for (let char of layout.textArea.value) {
         if (char !== '\n') {
             doubleBreak = false;
             unbrokenStreak++;
@@ -160,31 +172,44 @@ function enforceBreaks(textArea) {
             }
         }
 
+        // Auto break at breakinteval
         if (unbrokenStreak === maxRowLengths[breaks] + 1) {
-            console.log(cursorPos);
+            // If the cursor is at the edge, when a \n is added it'll offset stuff, so that needs to be readjusted
             if (specialPoints.includes(cursorPos)) {
                 cursorPos += 1;
             }
+
+            // Don't allow more than 4 lines of text via overflow
+            if (breaks == (maxRowLengths.length - 1)) {
+                break;
+            }
+
             newText += '\n';
             doubleBreakCheck = true;
             breaks++;
         }
 
+        // Don't allow the user to insert more than 4 breaks
         if (!((char === '\n') && (breaks >= maxRowLengths.length))) {
             newText += char;
         }
     }
 
-    textArea.value = newText;
+    layout.textArea.value = newText;
 
     // Make sure if a line break or new character was inserted, it doesn't jump the char to the end of the line
-    textArea.setSelectionRange(cursorPos, cursorPos);
+    layout.textArea.setSelectionRange(cursorPos, cursorPos);
+}
+
+function updateLayoutGUI(layout) {
+    updateValidity(layout);
+    updateOnion(layout);
 }
 
 // Create a backdrop (onion) to show changed text from default QWERTY
-function updateOnion(defaultText, textArea, onionTextArea) {
-    const mainLines = textArea.value.split('\n');
-    const defaultLines = defaultText.split('\n');
+function updateOnion(layout) {
+    const mainLines = layout.textArea.value.split('\n');
+    const defaultLines = layout.defaultText.split('\n');
     const onion = [];
 
     for (let i = 0; i < defaultLines.length; i++) {
@@ -208,20 +233,20 @@ function updateOnion(defaultText, textArea, onionTextArea) {
         }
     }
 
-    onionTextArea.value = onion.join('\n');
+    layout.onion.value = onion.join('\n');
 }
 
 // Check for changes in textboxes and layout type to determine savability
 function updateSavability() {
     let isSavable = false;
 
-    if (layoutMainTextArea.value !== savedMainLayout) {
-        tempMainLayout = layoutMainTextArea.value;
+    if (layouts.main.textArea.value !== savedMainLayout) {
+        tempMainLayout = layouts.main.textArea.value;
         isSavable = true;
     }
 
-    if (layoutShiftTextArea.value !== savedShiftLayout) {
-        tempShiftLayout = layoutShiftTextArea.value;
+    if (layouts.shift.textArea.value !== savedShiftLayout) {
+        tempShiftLayout = layouts.shift.textArea.value;
         isSavable = true;
     }
 
@@ -263,9 +288,24 @@ function updateState() {
     }
 }
 
+function updateValidity(layout) {
+    const set = [];
+
+    for (let char of layout.textArea.value) {
+        if (set.includes(char) && (char != "\n") && (char != " ")) {
+            console.log(char);
+            layout.textArea.classList.add("invalid");
+            return;
+        }
+        set.push(char);
+    }
+
+    layout.textArea.classList.remove("invalid");
+}
+
 function mapToQwerty() {
     mainLines = tempMainLayout.split("\n");
-    defaultMainLines = defaultMain.split("\n");
+    defaultMainLines = layouts.main.defaultText.split("\n");
     newMain = "";
 
     for (let i = 0; i < mainLines.length; i++) {
