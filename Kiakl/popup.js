@@ -1,15 +1,20 @@
 // Variables
 const submissionPageUrl = "https://forms.gle/rnjxrSd16K6q9Dry9";
 const maxRowLengths = [13, 13, 11, 10];
+let debug = false;
 
 const layouts = {
     main: {
+        temp: undefined,
+        saved: undefined,
         defaultText: "`1234567890-=\nqwertyuiop[]\\\nasdfghjkl;'\nzxcvbnm,./",
         prevText: undefined,
         textArea: undefined,
         onion: undefined
     },
     shift: {
+        temp: undefined,
+        saved: undefined,
         defaultText: "~!@#$%^&*()_+\nQWERTYUIOP{}|\nASDFGHJKL:\"\nZXCVBNM<>?",
         prevText: undefined,
         textArea: undefined,
@@ -17,7 +22,7 @@ const layouts = {
     }
 }
 
-let savedMainLayout, tempMainLayout, savedShiftLayout, tempShiftLayout, tempLayoutType, savedLayoutType;
+let tempLayoutType, savedLayoutType;
 let whitelistTextArea;
 let root, headerText, header, exportButton, submissionButton, layoutSaveButton;
 
@@ -78,14 +83,17 @@ function setupEventListeners() {
 
 // Function to save layouts to local storage
 function saveLayout() {
-    savedMainLayout = tempMainLayout;
-    savedShiftLayout = tempShiftLayout;
+    layouts.main.saved = layouts.main.temp;
+    layouts.shift.saved = layouts.shift.temp;
     savedLayoutType = tempLayoutType;
 
-    chrome.storage.local.set({ savedMainLayout });
-    chrome.storage.local.set({ savedShiftLayout });
+    chrome.storage.local.set({ savedMainLayout: layouts.main.saved });
+    chrome.storage.local.set({ savedShiftLayout: layouts.shift.saved });
     chrome.storage.local.set({ savedLayoutType });
     layoutSaveButton.setAttribute('disabled', true);
+
+    const keyMap = { ...mapToQwerty(layout.main), ...mapToQwerty(layout.shift) };
+    chrome.storage.local.set({ keyMap });
 }
 
 // Loading initial data from local storage
@@ -100,15 +108,15 @@ async function loadInitialData() {
     });
 
     // Assigning values from local storage to variables
-    savedMainLayout = result.savedMainLayout;
-    tempMainLayout = result.tempMainLayout;
-    layouts.main.textArea.value = tempMainLayout;
-    layouts.main.prevText = tempMainLayout;
+    layouts.main.saved = result.savedMainLayout;
+    layouts.main.temp = result.tempMainLayout;
+    layouts.main.textArea.value = result.tempMainLayout;
+    layouts.main.prevText = result.tempMainLayout;
 
-    savedShiftLayout = result.savedShiftLayout;
-    tempShiftLayout = result.tempShiftLayout;
-    layouts.shift.textArea.value = tempShiftLayout;
-    layouts.shift.prevText = tempShiftLayout;
+    layouts.shift.saved = result.savedShiftLayout;
+    layouts.shift.temp = result.tempShiftLayout;
+    layouts.shift.textArea.value = result.tempShiftLayout;
+    layouts.shift.prevText = result.tempShiftLayout;
 
     savedLayoutType = result.savedLayoutType;
     tempLayoutType = result.tempLayoutType;
@@ -152,10 +160,12 @@ function handleLayoutInput(layout) {
 
     layout.prevText = layout.textArea.value;
 
+    mapToQwerty();
+
     // Save temporary variables
-    chrome.storage.local.set({ tempMainLayout });
-    chrome.storage.local.set({ tempShiftLayout });
-    chrome.storage.local.set({ tempLayoutType });
+    chrome.storage.local.set({ savedMainLayout: layouts.main.saved });
+    chrome.storage.local.set({ savedShiftLayout: layouts.shift.saved });
+    chrome.storage.local.set({ savedLayoutType });
 }
 
 // Update layout text area based on input to include line breaks when max line length is reached
@@ -194,7 +204,7 @@ function enforceBreaks(layout) {
             // Don't allow more than 4 lines of text via overflow
             if (breaks == (maxRowLengths.length - 1)) {
                 reject();
-                return false;
+                return;
             }
 
             // If the cursor is at the edge, when a \n is added it'll offset stuff, so that needs to be readjusted
@@ -221,8 +231,6 @@ function enforceBreaks(layout) {
 
     // Make sure if a line break or new character was inserted, it doesn't jump the char to the end of the line
     layout.textArea.setSelectionRange(cursorPos, cursorPos);
-    console.log('unrejected');
-    return true;
 }
 
 function updateLayoutGUI(layout) {
@@ -264,13 +272,13 @@ function updateOnion(layout) {
 function updateSavability() {
     let isSavable = false;
 
-    if (layouts.main.textArea.value !== savedMainLayout) {
-        tempMainLayout = layouts.main.textArea.value;
+    if (layouts.main.textArea.value !== layouts.main.saved) {
+        layouts.main.temp = layouts.main.textArea.value;
         isSavable = true;
     }
 
-    if (layouts.shift.textArea.value !== savedShiftLayout) {
-        tempShiftLayout = layouts.shift.textArea.value;
+    if (layouts.shift.textArea.value !== layouts.shift.saved) {
+        layouts.shift.temp = layouts.shift.textArea.value;
         isSavable = true;
     }
 
@@ -323,16 +331,25 @@ function updateValidity(layout) {
     layout.textArea.classList.remove("invalid");
 }
 
-function mapToQwerty() {
-    mainLines = tempMainLayout.split("\n");
-    defaultMainLines = layouts.main.defaultText.split("\n");
+function mapToQwerty(layout) {
+    let mapping = {};
+    lines = layout.temp.split("\n");
+    defaultLines = layout.defaultText.split("\n");
     newMain = "";
 
-    for (let i = 0; i < mainLines.length; i++) {
-        newMain += mainLines[i] + defaultMainLines[i].substring(mainLines[i].length) + "\n";
-        console.log(mainLines[i] + defaultMainLines[i].substring(mainLines[i].length) + "\n");
+    for (let i = 0; i < defaultLines.length; i++) {
+        for (let j = 0; j < defaultLines[i].length; j++) {
+            if (i < lines.length && j < lines[i].length && lines[i].charAt(j) != " ") {
+                mapping[defaultLines[i].charAt(j)] = lines[i].charAt(j)
+            } else {
+                mapping[defaultLines[i].charAt(j)] = defaultLines[i].charAt(j)
+            }
+        }
     }
 
-    // If it fails, DO NOT SAVE, this means it is an invalid keyboard
-    return false;
+    if (debug) {
+        console.log(mapping);
+    }
+
+    return mapping;
 }
