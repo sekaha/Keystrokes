@@ -53,15 +53,19 @@ chrome.runtime.onMessage.addListener((message) => {
     }
 });
 
+// Save the data to the chrome local storage so it can be exported later
 const saveData = async () => {
     if (await isWhitelisted()) {
+        // for monkeytype
         started = false;
 
+        // Handles a weird edge case when the extension isn't fully loaded, probably not even encessary
         if (!chrome || !chrome.storage || !chrome.storage.local) {
             console.error('chrome.storage.local is not available, please wait for the extension to intialize fully');
             return;
         }
 
+        // Push this tab's typing history as a uniquely (well assuming somehow you don't do two at a time :p) identified session
         const session = {
             website: currentUrl,
             sessionID: Date.now(),
@@ -78,6 +82,26 @@ const saveData = async () => {
     }
 };
 
+// Run for generic websites
+function run() {
+    window.onkeydown = async function (event) {
+        const now = performance.now();
+        const timeToType = now - lastStrokeTime;
+        lastStrokeTime = now;
+        pushKey(normalizeKey(event.key), timeToType);
+    }
+}
+
+// Push a key to the history log
+function pushKey(key, duration) {
+    entry = {
+        key: key,
+        interval: duration
+    };
+
+    history.push(entry);
+}
+
 // ** WHITELIST UTILS ** //
 async function isWhitelisted() {
     const { whitelist } = await chrome.storage.local.get({ whitelist: ['monkeytype.com'] });
@@ -93,9 +117,6 @@ async function isWhitelisted() {
 
 function urlMatches(parent, child) {
     match = RegExp(`${parent.replace(/\*/g, '.*')}`);
-
-    console.log(parent, child, match.test(child))
-
     return match.test(child);
 }
 
@@ -140,7 +161,7 @@ function mtRun() {
                 if (started) {
                     const timeToType = now - lastStrokeTime;
                     lastStrokeTime = now;
-                    pushKey(normalizeKey(event.key), timeToType);
+                    mtPushKey(normalizeKey(event.key), timeToType);
                     resolve();
                 }
             }));
@@ -166,7 +187,8 @@ function mtDivChecks(mutationsList) {
     });
 }
 
-const pushKey = (key, duration) => {
+// Add a key to the history log
+const mtPushKey = (key, duration) => {
     let correctness = false;
 
     // Check if the key is correct or not by checking divs on monkeytype that reflect this

@@ -283,6 +283,7 @@ function updateOnion(layout) {
 function updateSavability() {
     let isSavable = false;
 
+    // Checking for mutations in any of the layout areas
     if (layouts.main.textArea.value !== layouts.main.saved) {
         layouts.main.temp = layouts.main.textArea.value;
         isSavable = true;
@@ -305,7 +306,10 @@ function updateSavability() {
         }
     }
 
-    if (isSavable) {
+    isValid = !(layouts.main.textArea.classList.contains('invalid') || layouts.shift.textArea.classList.contains('invalid'));
+
+    // Making sure that the layouts are valid
+    if (isSavable && isValid) {
         layoutSaveButton.removeAttribute('disabled');
     } else {
         layoutSaveButton.setAttribute('disabled', true);
