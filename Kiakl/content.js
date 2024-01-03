@@ -31,14 +31,14 @@ async function startTrackingSession() {
     ({ keyMap } = await chrome.storage.local.get({ keyMap: getDefaultMapping() }));
     ({ savedKeyboardType: keyboardType } = await chrome.storage.local.get({ savedKeyboardType: "rowStagger" }));
 
+    // Track this tab for deactivation and various checks in background.js
+    chrome.runtime.sendMessage({ action: 'trackTab' });
+
     // Handle all URL cases starting with special cases (just monkeytype for now)
     if (await isWhitelisted()) {
         if (debug) {
             console.log("extension active");
         }
-
-        // Track this tab for deactivation and various checks in background.js
-        chrome.runtime.sendMessage({ action: 'trackTab' });
 
         if (currentUrl == "https://monkeytype.com/") {
             // Check if the test ends
@@ -63,7 +63,7 @@ window.addEventListener('beforeunload', () => {
 })
 
 // Get activation/deactivation messages
-chrome.runtime.onMessage.addListener((message) => {
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if ((message.action) == "updateLayout") {
         if (debug) {
             console.log("layout updated");
@@ -79,17 +79,27 @@ chrome.runtime.onMessage.addListener((message) => {
             console.log("whitelist updated");
         }
 
-        // End tracking session
+        // Restart tracking session
         endTrackingSession();
-        // startTrackingSession();
+        startTrackingSession();
+    }
+
+    if (message.action === "requestWhitelisted") {
+        isWhitelisted().then((whitelisted) => {
+            console.log(whitelisted);
+            sendResponse({ whitelisted });
+        })
+        return true; // Indicates that the response will be sent asynchronously
     }
 
     if (message.extensionEnabled !== undefined) {
+        //if (await isWhitelisted()) {
         extensionEnabled = message.extensionEnabled;
 
         if (!extensionEnabled) {
             saveData();
         }
+        //}
     }
 });
 

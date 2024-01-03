@@ -122,7 +122,6 @@ async function loadInitialData() {
     // Load in the whitelist
     whitelistTextArea.value = tempWhitelist;
     await isCurrentTabWhitelisted();
-    console.log(whitelisted);
 
     chrome.storage.local.get({ extensionEnabled: false }, (result) => {
         extensionEnabled = result.extensionEnabled;
@@ -157,12 +156,11 @@ async function saveWhitelist() {
     chrome.storage.local.set({ savedWhitelist });
     whitelistSaveButton.setAttribute('disabled', true);
 
-    // Update if the site is now whitelisted
-    await isCurrentTabWhitelisted();
-    updateState();
-
     // Update websites to make sure they're still part of the whitelist (or check if they are now)
     chrome.runtime.sendMessage({ action: 'updateWhitelist' });
+
+    // Update if the site is now whitelisted
+    isCurrentTabWhitelisted().then(updateState);
 }
 
 // Toggling the extension status
@@ -348,6 +346,7 @@ async function isCurrentTabWhitelisted() {
     return new Promise((resolve) => {
         chrome.runtime.sendMessage({ action: "checkWhitelisted" }, (response) => {
             whitelisted = response.whitelisted;
+            console.log("isCurrentTabWhitelisted?", response.whitelisted);
             resolve();
         });
     });

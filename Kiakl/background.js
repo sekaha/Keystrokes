@@ -20,7 +20,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 chrome.tabs.sendMessage(tabId, { action: "updateLayout" })
                     .catch(error => console.error('Error toggeling tabs:', error));
             });
-            // return true;
             break;
         }
 
@@ -31,7 +30,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 chrome.tabs.sendMessage(tabId, { action: "updateWhitelist" })
                     .catch(error => console.error('Error toggeling tabs:', error));
             });
-            // return true;
             break;
         }
 
@@ -43,10 +41,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             // Waiting for the tab query is asynch, so make an async function and call it
             (async () => {
                 const tabs = await getPopupTab();
-                // I could totally make the whitelist update live... but i'd prefer to make the user refresh
-                // const tabIndex = activeTabs.indexOf(tab.id)
-                const whitelisted = (activeTabs.includes(tabs[0].id));
-                sendResponse({ whitelisted });
+
+                chrome.tabs.sendMessage(tabs[0].id, { action: "requestWhitelisted" }, (response) => {
+                    sendResponse({ whitelisted: response ? response.whitelisted : false })
+                })
             })();
 
             return true;
