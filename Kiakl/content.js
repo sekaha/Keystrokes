@@ -1,18 +1,33 @@
-let lastStrokeTime = 0
-let extensionEnabled = false;
-let started = false;
-let history = []
-let mtTimer = null;
-let mtActiveWord = null;
-let keyMap = undefined;
-let keyboardType = undefined;
 const debug = true;
-const currentUrl = window.location.href;
+let lastStrokeTime, extensionEnabled, started, history, mtTimer, mtActiveWord, keyMap, keyboardType, currentUrl;
 
 // ** MAIN FUNCTIONALITY ** //
-window.addEventListener('load', async () => {
+window.addEventListener('load', init);
+
+// Check for site updates, used for HREF and monkeytype test
+const observer = new MutationObserver(checkSiteUpdates);
+
+// Check for HREF
+observer.observe(document.body, {
+    attributes: true,
+    attributeFilter: ['href'],
+    subtree: true,
+});
+
+async function init() {
+    // Instantiate variables used throughout the program
+    lastStrokeTime = 0
+    extensionEnabled = false;
+    started = false;
+    history = []
+    mtTimer;
+    mtActiveWord;
+    keyMap;
+    keyboardType;
+    currentUrl = window.location.href;
+
     // Tell backgorund.js that a new tab is opened to be managed
-    chrome.runtime.sendMessage({ action: 'trackTab' });
+    currentUrl = window.location.href;
 
     // Load if the extension is activated or not
     ({ extensionEnabled } = await chrome.storage.local.get({ extensionEnabled: false }));
@@ -21,26 +36,31 @@ window.addEventListener('load', async () => {
 
     // Handle all URL cases starting with special cases (just monkeytype for now)
     if (await isWhitelisted()) {
-        console.log("extension active")
+        chrome.runtime.sendMessage({ action: 'trackTab' });
+
+        if (debug) {
+            console.log("extension active");
+        }
+
         if (currentUrl == "https://monkeytype.com/") {
             // Check if the test ends
-            const observer = new MutationObserver(mtDivChecks);
             const targetNode = document.getElementById('typingTest');
             const config = { childList: true, subtree: true };
             observer.observe(targetNode, config);
 
             mtRun();
         } else {
-
+            run();
         }
+    } else if (debug) {
+        console.log("extension inactive")
     }
-});
+}
 
 // Save data if the tab ends or is reloaded, this marks the end of a session (among other special conditions for typing games) 
 window.addEventListener('beforeunload', () => {
     if (extensionEnabled) {
-        saveData();
-        chrome.runtime.sendMessage({ action: 'untrackTab' })
+        endTrackingSession();
     }
 })
 
@@ -77,7 +97,11 @@ const saveData = async () => {
         };
 
         const { log } = await chrome.storage.local.get({ log: [] });
-        console.log(log);
+
+        if (debug) {
+            console.log(log);
+        }
+
         log.push(session);
 
         await chrome.storage.local.set({ log });
@@ -104,6 +128,45 @@ function pushKey(key, duration) {
     };
 
     history.push(entry);
+
+    if (debug) {
+        console.log(`${duration}: ${(key)}`);
+    }
+}
+
+function endTrackingSession() {
+    saveData();
+    chrome.runtime.sendMessage({ action: 'untrackTab' })
+}
+
+// Callback function for MutationObserver, ends the test if certain divs aren't active, or checks if the page HREF has changed
+function checkSiteUpdates(mutationsList) {
+    mutationsList.forEach((mutation) => {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'href') {
+            if (debug) {
+                console.log('URL has changed:', window.location.href);
+            }
+            endTrackingSession();
+            init();
+        }
+
+        if (mutation.type === 'childList') {
+            mtActiveWord = document.querySelector('#words .word.active');
+
+            if (started && mtActiveWord == null) {
+                if (debug) {
+                    console.log("monkeytype test ended");
+                    console.log(history);
+                }
+                started = false;
+                saveData();
+            }
+        }
+    });
+}
+
+function changePages() {
+
 }
 
 // ** WHITELIST UTILS ** //
@@ -120,8 +183,22 @@ async function isWhitelisted() {
 }
 
 function urlMatches(parent, child) {
-    match = RegExp(`${parent.replace(/\*/g, '.*')}`);
-    return match.test(child);
+    // Remove http:// or https://
+    child = child.replace(/^https?:\/\//, '');
+
+    // Remove www.
+    child = child.replace(/^www\./, '');
+
+    // Remove final / if present
+    child = child.replace(/\/$/, '');
+    parent = parent.replace(/\/$/, '');
+
+    if (parent.includes('*')) {
+        match = RegExp(`${parent.replace(/\*/g, '.*')}`);
+        return match.test(child);
+    } else {
+        return parent === child;
+    }
 }
 
 // ** KEY MAPPING UTILS ** //
@@ -171,24 +248,6 @@ function mtRun() {
             }));
         }
     }
-}
-
-// Callback function for MutationObserver, ends the test
-function mtDivChecks(mutationsList) {
-    mutationsList.forEach((mutation) => {
-        if (mutation.type === 'childList') {
-            mtActiveWord = document.querySelector('#words .word.active');
-
-            if (started && mtActiveWord == null) {
-                if (debug) {
-                    console.log("ended");
-                    console.log(history);
-                }
-                started = false;
-                saveData();
-            }
-        }
-    });
 }
 
 // Add a key to the history log
