@@ -4,22 +4,22 @@ let started = false;
 let history = []
 let mtTimer = null;
 let mtActiveWord = null;
+let keyMap = undefined;
 const debug = true;
 const currentUrl = window.location.href;
 
+// ** MAIN FUNCTIONALITY ** //
 window.addEventListener('load', async () => {
     // Tell backgorund.js that a new tab is opened to be managed
-    chrome.runtime.sendMessage({ action: 'trackTab' })
+    chrome.runtime.sendMessage({ action: 'trackTab' });
 
     // Load if the extension is activated or not
-    chrome.storage.local.get({ enabled: false }, (result) => {
-        extensionEnabled = result.enabled;
-    });
+    ({ extensionEnabled } = await chrome.storage.local.get({ extensionEnabled: false }));
+    console.log("is extension enabled?", extensionEnabled);
+    ({ keyMap } = await chrome.storage.local.get({ keyMap: getDefaultMapping() }));
 
     // Handle all URL cases starting with special cases (just monkeytype for now)
     if (await isWhitelisted()) {
-        console.log("the fitness wig pacer test the fitness wig pacer testthe fitness wig pacer testthe fitness wig pacer testthe fitness wig pacer test");
-
         if (currentUrl == "https://monkeytype.com/") {
             // Check if the test ends
             const observer = new MutationObserver(mtDivChecks);
@@ -28,6 +28,8 @@ window.addEventListener('load', async () => {
             observer.observe(targetNode, config);
 
             mtRun();
+        } else {
+
         }
     }
 });
@@ -76,7 +78,7 @@ const saveData = async () => {
     }
 };
 
-// URL Matching
+// ** WHITELIST UTILS ** //
 async function isWhitelisted() {
     const { whitelist } = await chrome.storage.local.get({ whitelist: ['monkeytype.com'] });
 
@@ -95,6 +97,16 @@ function urlMatches(parent, child) {
     console.log(parent, child, match.test(child))
 
     return match.test(child);
+}
+
+// ** KEY MAPPING UTILS ** //
+function normalizeKey(key) {
+    return keyMap[key] !== undefined ? keyMap[key] : key;
+}
+
+function getDefaultMapping() {
+    defaultSet = "~!@#$%^&*()_+QWERTYUIOP{}|ASDFGHJKL:\"ZXCVBNM<>?`1234567890-=qwertyuiop[]\\asdfghjkl;'zxcvbnm,./ ";
+    return Object.fromEntries([...defaultSet].map(char => [char, char]));
 }
 
 // ** MONKEY TYPE ** //
@@ -128,7 +140,7 @@ function mtRun() {
                 if (started) {
                     const timeToType = now - lastStrokeTime;
                     lastStrokeTime = now;
-                    pushKey(event.key, timeToType);
+                    pushKey(normalizeKey(event.key), timeToType);
                     resolve();
                 }
             }));

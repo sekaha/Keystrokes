@@ -29,8 +29,8 @@ let root, headerText, header, exportButton, submissionButton, layoutSaveButton;
 // DOMContentLoaded Event Listener
 document.addEventListener('DOMContentLoaded', function () {
     initializeVariables();
-    setupEventListeners();
     loadInitialData();
+    setupEventListeners();
 });
 
 // Initialization of variables
@@ -81,6 +81,19 @@ function setupEventListeners() {
     });
 }
 
+// Function to export data
+function exportData() {
+    chrome.storage.local.get({ log: [] }, (result) => {
+        const jsonBlob = new Blob([JSON.stringify(result.log, null, 2)], { type: 'application/json' });
+
+        chrome.downloads.download({
+            url: URL.createObjectURL(jsonBlob),
+            filename: "typingdata.json",
+            saveAs: true
+        });
+    });
+}
+
 // Function to save layouts to local storage
 function saveLayout() {
     layouts.main.saved = layouts.main.temp;
@@ -92,7 +105,7 @@ function saveLayout() {
     chrome.storage.local.set({ savedLayoutType });
     layoutSaveButton.setAttribute('disabled', true);
 
-    const keyMap = { ...mapToQwerty(layout.main), ...mapToQwerty(layout.shift) };
+    const keyMap = { ...mapToQwerty(layouts.main), ...mapToQwerty(layouts.shift) };
     chrome.storage.local.set({ keyMap });
 }
 
@@ -135,16 +148,16 @@ async function loadInitialData() {
     const { whitelist } = await chrome.storage.local.get({ whitelist: ['monkeytype.com'] });
     whitelistTextArea.value = whitelist.join('\n');
 
-    chrome.storage.local.get({ enabled: false }, (result) => {
-        enabled = result.enabled;
+    chrome.storage.local.get({ extensionEnabled: false }, (result) => {
+        extensionEnabled = result.extensionEnabled;
         updateState();
     });
 }
 
 // Toggling the extension status
 function toggleExtension() {
-    enabled = !enabled;
-    chrome.storage.local.set({ enabled }, () => {
+    extensionEnabled = !extensionEnabled;
+    chrome.storage.local.set({ extensionEnabled }, () => {
         updateState();
     });
 }
@@ -159,8 +172,6 @@ function handleLayoutInput(layout) {
     updateSavability();
 
     layout.prevText = layout.textArea.value;
-
-    mapToQwerty();
 
     // Save temporary variables
     chrome.storage.local.set({ savedMainLayout: layouts.main.saved });
@@ -303,14 +314,14 @@ function updateSavability() {
 
 // Function to update extension state
 function updateState() {
-    chrome.runtime.sendMessage({ action: 'toggleExtension', extensionEnabled: enabled });
+    chrome.runtime.sendMessage({ action: 'toggleExtension', extensionEnabled: extensionEnabled });
 
-    const iconPath = enabled ? 'icon.png' : 'deactivated.png';
-    const textContent = enabled ? 'Activated :)' : 'Deactivated :(';
-    const highlightColor = enabled ? 'var(--cyan)' : 'var(--purple)';
+    const iconPath = extensionEnabled ? 'icon.png' : 'deactivated.png';
+    const textContent = extensionEnabled ? 'Activated :)' : 'Deactivated :(';
+    const highlightColor = extensionEnabled ? 'var(--cyan)' : 'var(--purple)';
 
-    header.classList.remove(enabled ? 'off' : 'on');
-    header.classList.add(enabled ? 'on' : 'off');
+    header.classList.remove(extensionEnabled ? 'off' : 'on');
+    header.classList.add(extensionEnabled ? 'on' : 'off');
     headerText.textContent = textContent;
     chrome.action.setIcon({ path: iconPath });
     root.style.setProperty("--highlight", highlightColor);
@@ -332,7 +343,7 @@ function updateValidity(layout) {
 }
 
 function mapToQwerty(layout) {
-    let mapping = {};
+    let mapping = { " ": " " };
     lines = layout.temp.split("\n");
     defaultLines = layout.defaultText.split("\n");
     newMain = "";
@@ -340,7 +351,7 @@ function mapToQwerty(layout) {
     for (let i = 0; i < defaultLines.length; i++) {
         for (let j = 0; j < defaultLines[i].length; j++) {
             if (i < lines.length && j < lines[i].length && lines[i].charAt(j) != " ") {
-                mapping[defaultLines[i].charAt(j)] = lines[i].charAt(j)
+                mapping[lines[i].charAt(j)] = defaultLines[i].charAt(j)
             } else {
                 mapping[defaultLines[i].charAt(j)] = defaultLines[i].charAt(j)
             }
