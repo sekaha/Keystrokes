@@ -22,9 +22,9 @@ const layouts = {
     }
 }
 
-let tempLayoutType, savedLayoutType;
+let tempLayoutType, savedLayoutType, tempWhitelist, savedWhitelist;
 let whitelistTextArea;
-let root, headerText, header, exportButton, submissionButton, layoutSaveButton;
+let root, headerText, header, exportButton, submissionButton, layoutSaveButton, whitelistSaveButton;
 
 // DOMContentLoaded Event Listener
 document.addEventListener('DOMContentLoaded', function () {
@@ -44,6 +44,7 @@ function initializeVariables() {
     layouts.shift.onion = document.getElementById('layoutShiftOnion');
     submissionButton = document.getElementById('submission');
     layoutSaveButton = document.getElementById('saveLayout');
+    whitelistSaveButton = document.getElementById('saveWhitelist');
     options = document.getElementsByName('options');
     root = document.documentElement;
     headerText = header.querySelector('h1');
@@ -52,33 +53,15 @@ function initializeVariables() {
 
 // Setting up event listeners
 function setupEventListeners() {
-    submissionButton.addEventListener('click', () => {
-        chrome.tabs.create({ url: submissionPageUrl });
-    });
-
-    header.addEventListener('click', () => {
-        toggleExtension();
-    });
-
-    layouts.main.textArea.addEventListener('input', () => {
-        handleLayoutInput(layouts.main);
-    });
-
-    layouts.shift.textArea.addEventListener('input', () => {
-        handleLayoutInput(layouts.shift);
-    });
-
-    options.forEach((option) => {
-        option.addEventListener('click', updateSavability)
-    })
-
-    exportButton.addEventListener('click', () => {
-        exportData();
-    });
-
-    layoutSaveButton.addEventListener('click', () => {
-        saveLayout();
-    });
+    submissionButton.addEventListener('click', () => chrome.tabs.create({ url: submissionPageUrl }));
+    header.addEventListener('click', toggleExtension);
+    layouts.main.textArea.addEventListener('input', () => handleLayoutInput(layouts.main));
+    layouts.shift.textArea.addEventListener('input', () => handleLayoutInput(layouts.shift));
+    whitelistTextArea.addEventListener('input', updateWhitelist)
+    options.forEach(option => option.addEventListener('click', updateLayoutSavability));
+    exportButton.addEventListener('click', exportData);
+    layoutSaveButton.addEventListener('click', saveLayout);
+    whitelistSaveButton.addEventListener('click', saveWhitelist);
 }
 
 // Function to export data
@@ -94,30 +77,18 @@ function exportData() {
     });
 }
 
-// Function to save layouts to local storage
-function saveLayout() {
-    layouts.main.saved = layouts.main.temp;
-    layouts.shift.saved = layouts.shift.temp;
-    savedLayoutType = tempLayoutType;
-
-    chrome.storage.local.set({ savedMainLayout: layouts.main.saved });
-    chrome.storage.local.set({ savedShiftLayout: layouts.shift.saved });
-    chrome.storage.local.set({ savedLayoutType });
-    layoutSaveButton.setAttribute('disabled', true);
-
-    const keyMap = { ...mapToQwerty(layouts.main), ...mapToQwerty(layouts.shift) };
-    chrome.storage.local.set({ keyMap });
-}
-
 // Loading initial data from local storage
 async function loadInitialData() {
     const result = await chrome.storage.local.get({
+        // Default values
         savedMainLayout: layouts.main.defaultText,
         tempMainLayout: layouts.main.defaultText,
         savedShiftLayout: layouts.shift.defaultText,
         tempShiftLayout: layouts.shift.defaultText,
         savedLayoutType: "rowStagger",
-        tempLayoutType: "rowStagger"
+        tempLayoutType: "rowStagger",
+        savedWhitelist: "monkeytype.com",
+        tempWhitelist: "monkeytype.com"
     });
 
     // Assigning values from local storage to variables
@@ -134,24 +105,51 @@ async function loadInitialData() {
     savedLayoutType = result.savedLayoutType;
     tempLayoutType = result.tempLayoutType;
 
+    savedWhitelist = result.savedWhitelist
+    tempWhitelist = result.tempWhitelist;
+
+
     // Update radio buttons
     const selectedOption = document.getElementById(tempLayoutType);
-    console.log(selectedOption)
     selectedOption.checked = true;
 
     // Update GUI accordingly
     updateLayoutGUI(layouts.main);
     updateLayoutGUI(layouts.shift);
-    updateSavability();
+    updateLayoutSavability();
+    updateWhitelistSavability();
 
     // Load in the whitelist
-    const { whitelist } = await chrome.storage.local.get({ whitelist: ['monkeytype.com'] });
-    whitelistTextArea.value = whitelist.join('\n');
+    whitelistTextArea.value = tempWhitelist;
 
     chrome.storage.local.get({ extensionEnabled: false }, (result) => {
         extensionEnabled = result.extensionEnabled;
         updateState();
     });
+}
+
+
+// Function to save layouts to local storage
+function saveLayout() {
+    layouts.main.saved = layouts.main.temp;
+    layouts.shift.saved = layouts.shift.temp;
+    savedLayoutType = tempLayoutType;
+
+    chrome.storage.local.set({ savedMainLayout: layouts.main.saved });
+    chrome.storage.local.set({ savedShiftLayout: layouts.shift.saved });
+    chrome.storage.local.set({ savedLayoutType });
+    layoutSaveButton.setAttribute('disabled', true);
+
+    const keyMap = { ...mapToQwerty(layouts.main), ...mapToQwerty(layouts.shift) };
+    chrome.storage.local.set({ keyMap });
+}
+
+// Function to save the whitelist to the local storage
+function saveWhitelist() {
+    savedWhitelist = tempWhitelist;
+    chrome.storage.local.set({ tempWhitelist });
+    chrome.storage.local.set({ savedWhitelist });
+    whitelistSaveButton.setAttribute('disabled', true);
 }
 
 // Toggling the extension status
@@ -162,6 +160,22 @@ function toggleExtension() {
     });
 }
 
+// Update the whitelist text
+function updateWhitelist() {
+    tempWhitelist = whitelistTextArea.value;
+    chrome.storage.local.set({ tempWhitelist });
+    updateWhitelistSavability();
+}
+
+// Check updates in whitelist to see if it should be saved or not
+function updateWhitelistSavability() {
+    if (tempWhitelist != savedWhitelist) {
+        whitelistSaveButton.removeAttribute('disabled');
+    } else {
+        whitelistSaveButton.setAttribute('disabled', true);
+    }
+}
+
 // Handling input in layout text areas
 function handleLayoutInput(layout) {
     enforceBreaks(layout);
@@ -169,18 +183,17 @@ function handleLayoutInput(layout) {
     // Cheap fix I'll just accept for now
     enforceBreaks(layout);
     updateLayoutGUI(layout);
-    updateSavability();
+    updateLayoutSavability();
 
     layout.prevText = layout.textArea.value;
 
     // Save temporary variables
-    chrome.storage.local.set({ savedMainLayout: layouts.main.saved });
-    chrome.storage.local.set({ savedShiftLayout: layouts.shift.saved });
-    chrome.storage.local.set({ savedLayoutType });
+    chrome.storage.local.set({ tempMainLayout: layouts.main.temp });
+    chrome.storage.local.set({ tempShiftLayout: layouts.shift.temp });
+    chrome.storage.local.set({ tempLayoutType });
 }
 
 // Update layout text area based on input to include line breaks when max line length is reached
-// Returns bool of if error free
 function enforceBreaks(layout) {
     let cursorPos = layout.textArea.selectionStart;
     let newText = '';
@@ -190,9 +203,7 @@ function enforceBreaks(layout) {
     const specialPoints = [14, 28, 40];
 
     function reject() {
-        console.log("rejected")
         layout.textArea.value = layout.prevText;
-        console.log(layout.prevText)
         layout.textArea.setSelectionRange(cursorPos, cursorPos);
     }
 
@@ -280,7 +291,7 @@ function updateOnion(layout) {
 }
 
 // Check for changes in textboxes and layout type to determine savability
-function updateSavability() {
+function updateLayoutSavability() {
     let isSavable = false;
 
     // Checking for mutations in any of the layout areas
@@ -316,12 +327,12 @@ function updateSavability() {
     }
 }
 
-// Function to update extension state
+// Function to extension state and reflect that in pop up
 function updateState() {
     chrome.runtime.sendMessage({ action: 'toggleExtension', extensionEnabled: extensionEnabled });
 
     const iconPath = extensionEnabled ? 'icon.png' : 'deactivated.png';
-    const textContent = extensionEnabled ? 'Activated :)' : 'Deactivated :(';
+    const textContent = extensionEnabled ? 'Activated :)' : 'Refresh Required' //'Deactivated :(';
     const highlightColor = extensionEnabled ? 'var(--cyan)' : 'var(--purple)';
 
     header.classList.remove(extensionEnabled ? 'off' : 'on');
@@ -336,7 +347,6 @@ function updateValidity(layout) {
 
     for (let char of layout.textArea.value) {
         if (set.includes(char) && (char != "\n") && (char != " ")) {
-            console.log(char);
             layout.textArea.classList.add("invalid");
             return;
         }

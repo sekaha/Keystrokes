@@ -246,6 +246,7 @@ button {
     border: none;
     cursor: pointer;
     border-radius: 3px;
+    transition: .1s ease-in-out;
 }
 
 button.save {

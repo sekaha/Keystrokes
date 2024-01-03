@@ -5,6 +5,7 @@ let history = []
 let mtTimer = null;
 let mtActiveWord = null;
 let keyMap = undefined;
+let keyboardType = undefined;
 const debug = true;
 const currentUrl = window.location.href;
 
@@ -15,11 +16,12 @@ window.addEventListener('load', async () => {
 
     // Load if the extension is activated or not
     ({ extensionEnabled } = await chrome.storage.local.get({ extensionEnabled: false }));
-    console.log("is extension enabled?", extensionEnabled);
     ({ keyMap } = await chrome.storage.local.get({ keyMap: getDefaultMapping() }));
+    ({ keyboardType } = await chrome.storage.local.get({ keyboardType: "rowStagger" }));
 
     // Handle all URL cases starting with special cases (just monkeytype for now)
     if (await isWhitelisted()) {
+        console.log("extension active")
         if (currentUrl == "https://monkeytype.com/") {
             // Check if the test ends
             const observer = new MutationObserver(mtDivChecks);
@@ -69,7 +71,9 @@ const saveData = async () => {
         const session = {
             website: currentUrl,
             sessionID: Date.now(),
-            data: history
+            data: history,
+            layout: Object.keys(keyMap).join(""),
+            keyboardType: keyboardType
         };
 
         const { log } = await chrome.storage.local.get({ log: [] });
@@ -104,9 +108,9 @@ function pushKey(key, duration) {
 
 // ** WHITELIST UTILS ** //
 async function isWhitelisted() {
-    const { whitelist } = await chrome.storage.local.get({ whitelist: ['monkeytype.com'] });
+    const { savedWhitelist } = await chrome.storage.local.get({ savedWhitelist: 'monkeytype.com' });
 
-    for (const site of whitelist) {
+    for (const site of savedWhitelist.split("\n")) {
         if (urlMatches(site, currentUrl)) {
             return true;
         }
