@@ -22,7 +22,7 @@ const layouts = {
     }
 }
 
-let tempLayoutType, savedLayoutType, tempWhitelist, savedWhitelist;
+let whitelisted, tempKeyboardType, savedKeyboardType, tempWhitelist, savedWhitelist;
 let whitelistTextArea;
 let root, headerText, header, exportButton, submissionButton, layoutSaveButton, whitelistSaveButton;
 
@@ -85,8 +85,8 @@ async function loadInitialData() {
         tempMainLayout: layouts.main.defaultText,
         savedShiftLayout: layouts.shift.defaultText,
         tempShiftLayout: layouts.shift.defaultText,
-        savedLayoutType: "rowStagger",
-        tempLayoutType: "rowStagger",
+        savedKeyboardType: "rowStagger",
+        tempKeyboardType: "rowStagger",
         savedWhitelist: "monkeytype.com",
         tempWhitelist: "monkeytype.com"
     });
@@ -102,15 +102,15 @@ async function loadInitialData() {
     layouts.shift.textArea.value = result.tempShiftLayout;
     layouts.shift.prevText = result.tempShiftLayout;
 
-    savedLayoutType = result.savedLayoutType;
-    tempLayoutType = result.tempLayoutType;
+    savedKeyboardType = result.savedKeyboardType;
+    tempKeyboardType = result.tempKeyboardType;
 
     savedWhitelist = result.savedWhitelist
     tempWhitelist = result.tempWhitelist;
 
 
     // Update radio buttons
-    const selectedOption = document.getElementById(tempLayoutType);
+    const selectedOption = document.getElementById(tempKeyboardType);
     selectedOption.checked = true;
 
     // Update GUI accordingly
@@ -121,6 +121,8 @@ async function loadInitialData() {
 
     // Load in the whitelist
     whitelistTextArea.value = tempWhitelist;
+    await isCurrentTabWhitelisted();
+    console.log(whitelisted);
 
     chrome.storage.local.get({ extensionEnabled: false }, (result) => {
         extensionEnabled = result.extensionEnabled;
@@ -133,31 +135,44 @@ async function loadInitialData() {
 function saveLayout() {
     layouts.main.saved = layouts.main.temp;
     layouts.shift.saved = layouts.shift.temp;
-    savedLayoutType = tempLayoutType;
+    savedKeyboardType = tempKeyboardType;
 
     chrome.storage.local.set({ savedMainLayout: layouts.main.saved });
     chrome.storage.local.set({ savedShiftLayout: layouts.shift.saved });
-    chrome.storage.local.set({ savedLayoutType });
+    chrome.storage.local.set({ savedKeyboardType });
+
     layoutSaveButton.setAttribute('disabled', true);
 
     const keyMap = { ...mapToQwerty(layouts.main), ...mapToQwerty(layouts.shift) };
     chrome.storage.local.set({ keyMap });
+
+    // Make each tab update to be in the new layout
+    chrome.runtime.sendMessage({ action: 'updateLayout' });
 }
 
 // Function to save the whitelist to the local storage
-function saveWhitelist() {
+async function saveWhitelist() {
     savedWhitelist = tempWhitelist;
     chrome.storage.local.set({ tempWhitelist });
     chrome.storage.local.set({ savedWhitelist });
     whitelistSaveButton.setAttribute('disabled', true);
+
+    // Update if the site is now whitelisted
+    await isCurrentTabWhitelisted();
+    updateState();
+
+    // Update websites to make sure they're still part of the whitelist (or check if they are now)
+    chrome.runtime.sendMessage({ action: 'updateWhitelist' });
 }
 
 // Toggling the extension status
 function toggleExtension() {
-    extensionEnabled = !extensionEnabled;
-    chrome.storage.local.set({ extensionEnabled }, () => {
+    if (whitelisted) {
+        chrome.runtime.sendMessage({ action: 'toggleExtension', extensionEnabled: extensionEnabled });
+        extensionEnabled = !extensionEnabled
+        chrome.storage.local.set({ extensionEnabled });
         updateState();
-    });
+    }
 }
 
 // Update the whitelist text
@@ -187,10 +202,9 @@ function handleLayoutInput(layout) {
 
     layout.prevText = layout.textArea.value;
 
-    // Save temporary variables
+    // Save temporary variables so that when the window opens next it's the same
     chrome.storage.local.set({ tempMainLayout: layouts.main.temp });
     chrome.storage.local.set({ tempShiftLayout: layouts.shift.temp });
-    chrome.storage.local.set({ tempLayoutType });
 }
 
 // Update layout text area based on input to include line breaks when max line length is reached
@@ -305,11 +319,14 @@ function updateLayoutSavability() {
         isSavable = true;
     }
 
+    // Checking for mutations in layout type
     for (let option of options) {
         if (option.checked) {
-            tempLayoutType = option.id;
+            // Change it and save it so that when the window opens next it's the same
+            tempKeyboardType = option.id;
+            chrome.storage.local.set({ tempKeyboardType });
 
-            if (tempLayoutType !== savedLayoutType) {
+            if (tempKeyboardType !== savedKeyboardType) {
                 isSavable = true;
             }
 
@@ -327,16 +344,31 @@ function updateLayoutSavability() {
     }
 }
 
+async function isCurrentTabWhitelisted() {
+    return new Promise((resolve) => {
+        chrome.runtime.sendMessage({ action: "checkWhitelisted" }, (response) => {
+            whitelisted = response.whitelisted;
+            resolve();
+        });
+    });
+}
+
 // Function to extension state and reflect that in pop up
 function updateState() {
-    chrome.runtime.sendMessage({ action: 'toggleExtension', extensionEnabled: extensionEnabled });
+    lightMode = (extensionEnabled && whitelisted)
+    let textContent;
 
-    const iconPath = extensionEnabled ? 'icon.png' : 'deactivated.png';
-    const textContent = extensionEnabled ? 'Activated :)' : 'Refresh Required' //'Deactivated :(';
-    const highlightColor = extensionEnabled ? 'var(--cyan)' : 'var(--purple)';
+    if (!whitelisted) {
+        textContent = "Not Whitelisted";
+    } else {
+        textContent = extensionEnabled ? 'Activated :)' : 'Deactivated :(';
+    }
 
-    header.classList.remove(extensionEnabled ? 'off' : 'on');
-    header.classList.add(extensionEnabled ? 'on' : 'off');
+    const iconPath = lightMode ? 'icon.png' : 'deactivated.png';
+    const highlightColor = lightMode ? 'var(--cyan)' : 'var(--purple)';
+
+    header.classList.remove(lightMode ? 'off' : 'on');
+    header.classList.add(lightMode ? 'on' : 'off');
     headerText.textContent = textContent;
     chrome.action.setIcon({ path: iconPath });
     root.style.setProperty("--highlight", highlightColor);

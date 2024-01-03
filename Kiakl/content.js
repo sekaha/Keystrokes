@@ -2,7 +2,7 @@ const debug = true;
 let lastStrokeTime, extensionEnabled, started, history, mtTimer, mtActiveWord, keyMap, keyboardType, currentUrl;
 
 // ** MAIN FUNCTIONALITY ** //
-window.addEventListener('load', init);
+window.addEventListener('load', startTrackingSession);
 
 // Check for site updates, used for HREF and monkeytype test
 const observer = new MutationObserver(checkSiteUpdates);
@@ -14,7 +14,7 @@ observer.observe(document.body, {
     subtree: true,
 });
 
-async function init() {
+async function startTrackingSession() {
     // Instantiate variables used throughout the program
     lastStrokeTime = 0
     extensionEnabled = false;
@@ -26,21 +26,19 @@ async function init() {
     keyboardType;
     currentUrl = window.location.href;
 
-    // Tell backgorund.js that a new tab is opened to be managed
-    currentUrl = window.location.href;
-
     // Load if the extension is activated or not
     ({ extensionEnabled } = await chrome.storage.local.get({ extensionEnabled: false }));
     ({ keyMap } = await chrome.storage.local.get({ keyMap: getDefaultMapping() }));
-    ({ keyboardType } = await chrome.storage.local.get({ keyboardType: "rowStagger" }));
+    ({ savedKeyboardType: keyboardType } = await chrome.storage.local.get({ savedKeyboardType: "rowStagger" }));
 
     // Handle all URL cases starting with special cases (just monkeytype for now)
     if (await isWhitelisted()) {
-        chrome.runtime.sendMessage({ action: 'trackTab' });
-
         if (debug) {
             console.log("extension active");
         }
+
+        // Track this tab for deactivation and various checks in background.js
+        chrome.runtime.sendMessage({ action: 'trackTab' });
 
         if (currentUrl == "https://monkeytype.com/") {
             // Check if the test ends
@@ -66,6 +64,26 @@ window.addEventListener('beforeunload', () => {
 
 // Get activation/deactivation messages
 chrome.runtime.onMessage.addListener((message) => {
+    if ((message.action) == "updateLayout") {
+        if (debug) {
+            console.log("layout updated");
+        }
+
+        // Restart tracking session
+        endTrackingSession();
+        startTrackingSession();
+    }
+
+    if ((message.action) == "updateWhitelist") {
+        if (debug) {
+            console.log("whitelist updated");
+        }
+
+        // End tracking session
+        endTrackingSession();
+        // startTrackingSession();
+    }
+
     if (message.extensionEnabled !== undefined) {
         extensionEnabled = message.extensionEnabled;
 
@@ -76,18 +94,24 @@ chrome.runtime.onMessage.addListener((message) => {
 });
 
 // Save the data to the chrome local storage so it can be exported later
+// (await isWhitelisted())
 const saveData = async () => {
-    if (await isWhitelisted()) {
+
+    if (history.length > 0) {
+        if (debug) {
+            console.log("saving data");
+        }
+
         // for monkeytype
         started = false;
 
-        // Handles a weird edge case when the extension isn't fully loaded, probably not even encessary
+        // Handles a weird bug when the extension isn't fully loaded, probably not even necessary but I spent an hour figuring it out so it stays
         if (!chrome || !chrome.storage || !chrome.storage.local) {
             console.error('chrome.storage.local is not available, please wait for the extension to intialize fully');
             return;
         }
 
-        // Push this tab's typing history as a uniquely (well assuming somehow you don't do two at a time :p) identified session
+        // Push this tab's typing history as a uniquely identified session to the locally stored log file
         const session = {
             website: currentUrl,
             sessionID: Date.now(),
@@ -106,6 +130,7 @@ const saveData = async () => {
 
         await chrome.storage.local.set({ log });
 
+        // Clear session history
         history = [];
     }
 };
@@ -142,12 +167,12 @@ function endTrackingSession() {
 // Callback function for MutationObserver, ends the test if certain divs aren't active, or checks if the page HREF has changed
 function checkSiteUpdates(mutationsList) {
     mutationsList.forEach((mutation) => {
-        if (mutation.type === 'attributes' && mutation.attributeName === 'href') {
+        if (currentUrl != window.location.href && mutation.type === 'attributes' && mutation.attributeName === 'href') {
             if (debug) {
                 console.log('URL has changed:', window.location.href);
             }
             endTrackingSession();
-            init();
+            startTrackingSession();
         }
 
         if (mutation.type === 'childList') {
