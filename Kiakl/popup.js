@@ -166,8 +166,8 @@ async function saveWhitelist() {
 // Toggling the extension status
 function toggleExtension() {
     if (whitelisted) {
+        extensionEnabled = !extensionEnabled;
         chrome.runtime.sendMessage({ action: 'toggleExtension', extensionEnabled: extensionEnabled });
-        extensionEnabled = !extensionEnabled
         chrome.storage.local.set({ extensionEnabled });
         updateState();
     }

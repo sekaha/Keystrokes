@@ -47,6 +47,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 })
             })();
 
+            // Return true to indicate info will be sent asycnhronously
             return true;
         }
 
@@ -70,3 +71,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
 });
 
+chrome.tabs.onUpdated.addListener((id, change, tab) => {
+    // Send activation messages to each tab
+    chrome.tabs.sendMessage(id, { action: "updateWhitelist" })
+        .catch(error => console.error('Error toggeling tabs:', error));
+});

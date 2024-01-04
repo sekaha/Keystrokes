@@ -1,5 +1,6 @@
 const debug = true;
 let lastStrokeTime, extensionEnabled, started, history, mtTimer, mtActiveWord, keyMap, keyboardType, currentUrl;
+console.log("active on page at least");
 
 // ** MAIN FUNCTIONALITY ** //
 window.addEventListener('load', startTrackingSession);
@@ -70,8 +71,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         }
 
         // Restart tracking session
-        endTrackingSession();
-        startTrackingSession();
+        renewSession();
     }
 
     if ((message.action) == "updateWhitelist") {
@@ -80,33 +80,32 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         }
 
         // Restart tracking session
-        endTrackingSession();
-        startTrackingSession();
+        renewSession();
     }
 
     if (message.action === "requestWhitelisted") {
         isWhitelisted().then((whitelisted) => {
-            console.log(whitelisted);
             sendResponse({ whitelisted });
         })
         return true; // Indicates that the response will be sent asynchronously
     }
 
     if (message.extensionEnabled !== undefined) {
+        console.log(message.extensionEnabled ? "enabled tracking" : "disabled tracking");
         //if (await isWhitelisted()) {
         extensionEnabled = message.extensionEnabled;
 
         if (!extensionEnabled) {
-            saveData();
+            endTrackingSession();
+        } else {
+            startTrackingSession();
         }
-        //}
     }
 });
 
 // Save the data to the chrome local storage so it can be exported later
 // (await isWhitelisted())
 const saveData = async () => {
-
     if (history.length > 0) {
         if (debug) {
             console.log("saving data");
@@ -170,21 +169,19 @@ function pushKey(key, duration) {
 }
 
 function endTrackingSession() {
+    started = false;
     saveData();
     chrome.runtime.sendMessage({ action: 'untrackTab' })
+}
+
+function renewSession() {
+    endTrackingSession();
+    startTrackingSession();
 }
 
 // Callback function for MutationObserver, ends the test if certain divs aren't active, or checks if the page HREF has changed
 function checkSiteUpdates(mutationsList) {
     mutationsList.forEach((mutation) => {
-        if (currentUrl != window.location.href && mutation.type === 'attributes' && mutation.attributeName === 'href') {
-            if (debug) {
-                console.log('URL has changed:', window.location.href);
-            }
-            endTrackingSession();
-            startTrackingSession();
-        }
-
         if (mutation.type === 'childList') {
             mtActiveWord = document.querySelector('#words .word.active');
 
@@ -218,15 +215,8 @@ async function isWhitelisted() {
 }
 
 function urlMatches(parent, child) {
-    // Remove http:// or https://
-    child = child.replace(/^https?:\/\//, '');
-
-    // Remove www.
-    child = child.replace(/^www\./, '');
-
-    // Remove final / if present
-    child = child.replace(/\/$/, '');
-    parent = parent.replace(/\/$/, '');
+    parent = normalizeUrl(parent);
+    child = normalizeUrl(child);
 
     if (parent.includes('*')) {
         match = RegExp(`${parent.replace(/\*/g, '.*')}`);
@@ -234,6 +224,19 @@ function urlMatches(parent, child) {
     } else {
         return parent === child;
     }
+}
+
+function normalizeUrl(url) {
+    // Remove http:// or https://
+    url = url.replace(/^https?:\/\//, '');
+
+    // Remove www.
+    url = url.replace(/^www\./, '');
+
+    // Remove final / if present
+    url = url.replace(/\/$/, '');
+
+    return url;
 }
 
 // ** KEY MAPPING UTILS ** //
