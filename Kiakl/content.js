@@ -33,6 +33,7 @@ async function startTrackingSession() {
 
         if (currentUrl == "https://monkeytype.com/") {
             // Check if the test ends
+            const observer = new MutationObserver(checkSiteUpdates);
             const targetNode = document.getElementById('typingTest');
             const config = { childList: true, subtree: true };
             observer.observe(targetNode, config);
