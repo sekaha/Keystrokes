@@ -209,7 +209,9 @@ function urlMatches(parent, child) {
     parent = normalizeUrl(parent);
     child = normalizeUrl(child);
 
-    console.log(parent, child);
+    if (debug) {
+        console.log("checking if website is in whitelist", parent, child);
+    }
 
     if (parent.includes('*')) {
         match = RegExp(`${parent.replace(/\*/g, '.*')}`);
