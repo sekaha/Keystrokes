@@ -5,16 +5,6 @@ console.log("active on page at least");
 // ** MAIN FUNCTIONALITY ** //
 window.addEventListener('load', startTrackingSession);
 
-// Check for site updates, used for HREF and monkeytype test
-const observer = new MutationObserver(checkSiteUpdates);
-
-// Check for HREF
-observer.observe(document.body, {
-    attributes: true,
-    attributeFilter: ['href'],
-    subtree: true,
-});
-
 async function startTrackingSession() {
     // Instantiate variables used throughout the program
     lastStrokeTime = 0
@@ -204,6 +194,7 @@ function changePages() {
 // ** WHITELIST UTILS ** //
 async function isWhitelisted() {
     const { savedWhitelist } = await chrome.storage.local.get({ savedWhitelist: 'monkeytype.com' });
+    currentUrl = window.location.href;
 
     for (const site of savedWhitelist.split("\n")) {
         if (urlMatches(site, currentUrl)) {
@@ -217,6 +208,8 @@ async function isWhitelisted() {
 function urlMatches(parent, child) {
     parent = normalizeUrl(parent);
     child = normalizeUrl(child);
+
+    console.log(parent, child);
 
     if (parent.includes('*')) {
         match = RegExp(`${parent.replace(/\*/g, '.*')}`);

@@ -18,7 +18,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             // Send activation messages to each tab
             activeTabs.forEach(tabId => {
                 chrome.tabs.sendMessage(tabId, { action: "updateLayout" })
-                    .catch(error => console.error('Error toggeling tabs:', error));
+                    .catch(error => console.error('Error updating layout in tabs:', error));
             });
             break;
         }
@@ -28,7 +28,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             // Send activation messages to each tab
             activeTabs.forEach(tabId => {
                 chrome.tabs.sendMessage(tabId, { action: "updateWhitelist" })
-                    .catch(error => console.error('Error toggeling tabs:', error));
+                    .catch(error => console.error('Error updating whitelist in tabs:', error));
             });
             break;
         }
@@ -73,6 +73,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 chrome.tabs.onUpdated.addListener((id, change, tab) => {
     // Send activation messages to each tab
-    chrome.tabs.sendMessage(id, { action: "updateWhitelist" })
-        .catch(error => console.error('Error toggeling tabs:', error));
+
+    if (activeTabs.includes(id)) {
+        console.log("URL change check");
+
+        chrome.tabs.sendMessage(id, { action: "updateWhitelist" })
+            .catch(error => console.error('Error updating tab:', error));
+    }
 });
