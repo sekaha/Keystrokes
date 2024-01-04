@@ -50,6 +50,7 @@ async function startTrackingSession() {
 // Save data if the tab ends or is reloaded, this marks the end of a session (among other special conditions for typing games) 
 window.addEventListener('beforeunload', () => {
     if (extensionEnabled) {
+        chrome.runtime.sendMessage({ action: 'untrackTab' });
         endTrackingSession();
     }
 })
@@ -162,7 +163,6 @@ function pushKey(key, duration) {
 function endTrackingSession() {
     started = false;
     saveData();
-    chrome.runtime.sendMessage({ action: 'untrackTab' })
 }
 
 function renewSession() {
