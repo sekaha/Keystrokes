@@ -1,3 +1,4 @@
+To use the extension:
 1. Download the folder labeled "Kiakl."
 1. Go to chrome://extensions/ in your Chrome browser.
 1. Enable 'Developer mode' using the toggle switch.
