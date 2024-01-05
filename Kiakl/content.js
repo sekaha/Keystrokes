@@ -10,7 +10,6 @@ chrome.runtime.sendMessage({ action: 'trackTab' });
 async function startTrackingSession() {
     // Instantiate variables used throughout the program
     lastStrokeTime = 0
-    extensionEnabled = false;
     started = false;
     history = []
     mtTimer;
@@ -76,6 +75,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
     if (message.action === "requestWhitelisted") {
         isWhitelisted().then((whitelisted) => {
+            // If the website is whitelisted and not active, check to see if that has changed
+            if (!extensionEnabled) {
+                renewSession();
+            }
             debugLog("sending white list request back");
             sendResponse({ whitelisted });
         })
@@ -187,6 +190,7 @@ async function isWhitelisted() {
     for (const site of savedWhitelist.split("\n")) {
         if (urlMatches(site, currentUrl)) {
             debugLog("website match found");
+
             return true;
         }
     }

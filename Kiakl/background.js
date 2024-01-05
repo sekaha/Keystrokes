@@ -10,6 +10,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 chrome.tabs.sendMessage(tabId, { extensionEnabled: message.extensionEnabled })
                     .catch(error => console.error('Error toggeling tabs:', error));
             });
+            console.log(activeTabs);
             break;
         }
 
@@ -43,7 +44,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 const tabs = await getPopupTab();
 
                 chrome.tabs.sendMessage(tabs[0].id, { action: "requestWhitelisted" }, (response) => {
-                    sendResponse({ whitelisted: response ? response.whitelisted : false })
+                    sendResponse({ whitelisted: response ? response.whitelisted : false }).catch(error => console.error('Error checking white list:', error));
                 })
             })();
 
@@ -78,5 +79,7 @@ chrome.tabs.onUpdated.addListener((id, change, tab) => {
 
         chrome.tabs.sendMessage(id, { action: "updateWhitelist" })
             .catch(error => console.error('Error updating tab:', error));
+    } else {
+        console.log("");
     }
 });
