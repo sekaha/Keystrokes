@@ -26,9 +26,7 @@ async function startTrackingSession() {
 
     // Handle all URL cases starting with special cases (just monkeytype for now)
     if (await isWhitelisted()) {
-        if (debug) {
-            console.log("extension active");
-        }
+        debugLog("extension active");
 
         if (currentUrl == "https://monkeytype.com/") {
             // Check if the test ends
@@ -41,8 +39,9 @@ async function startTrackingSession() {
         } else {
             run();
         }
-    } else if (debug) {
-        console.log("extension inactive")
+    } else {
+        debugLog("extension inactive");
+        extensionEnabled = false;
     }
 }
 
@@ -61,33 +60,30 @@ window.addEventListener('unload', () => {
 // Get activation/deactivation messages
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if ((message.action) == "updateLayout") {
-        if (debug) {
-            console.log("layout updated");
-        }
-
-        // Restart tracking session
+        debugLog("layout updated");
         renewSession();
     }
 
     if ((message.action) == "updateWhitelist") {
-        if (debug) {
-            console.log("whitelist updated");
-        }
+        debugLog("whitelist updated");
+        renewSession();
+    }
 
-        // Restart tracking session
+    if ((message.action) == "updateUrl") {
+        debugLog("url changed");
         renewSession();
     }
 
     if (message.action === "requestWhitelisted") {
         isWhitelisted().then((whitelisted) => {
+            debugLog("sending white list request back");
             sendResponse({ whitelisted });
         })
         return true; // Indicates that the response will be sent asynchronously
     }
 
     if (message.extensionEnabled !== undefined) {
-        console.log(message.extensionEnabled ? "enabled tracking" : "disabled tracking");
-        //if (await isWhitelisted()) {
+        debugLog(message.extensionEnabled ? "enabled tracking" : "disabled tracking");
         extensionEnabled = message.extensionEnabled;
 
         if (!extensionEnabled) {
@@ -99,12 +95,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 // Save the data to the chrome local storage so it can be exported later
-// (await isWhitelisted())
 const saveData = async () => {
     if (history.length > 0) {
-        if (debug) {
-            console.log("saving data");
-        }
+        debugLog("saving data");
 
         // for monkeytype
         started = false;
@@ -125,11 +118,7 @@ const saveData = async () => {
         };
 
         const { log } = await chrome.storage.local.get({ log: [] });
-
-        if (debug) {
-            console.log(log);
-        }
-
+        debugLog(log);
         log.push(session);
 
         await chrome.storage.local.set({ log });
@@ -157,10 +146,7 @@ function pushKey(key, duration) {
     };
 
     history.push(entry);
-
-    if (debug) {
-        console.log(`${duration}: ${(key)}`);
-    }
+    debugLog(`${duration}: ${(key)}`);
 }
 
 function endTrackingSession() {
@@ -185,12 +171,7 @@ function checkSiteUpdates(mutationsList) {
             const opacity = parseFloat(window.getComputedStyle(timer).getPropertyValue('opacity'));
 
             if (started && (mtActiveWord == null || (opacity == 0))) {
-                if (debug) {
-                    console.log("monkeytype test ended");
-                    console.log(history);
-                }
-                started = false;
-                saveData();
+                mtEndTest();
             }
         }
     });
@@ -203,10 +184,12 @@ async function isWhitelisted() {
 
     for (const site of savedWhitelist.split("\n")) {
         if (urlMatches(site, currentUrl)) {
+            debugLog("website match found");
             return true;
         }
     }
 
+    debugLog("website not whitelisted");
     return false;
 }
 
@@ -214,9 +197,7 @@ function urlMatches(parent, child) {
     parent = normalizeUrl(parent);
     child = normalizeUrl(child);
 
-    if (debug) {
-        console.log("checking if website is in whitelist", parent, child);
-    }
+    debugLog("checking if website is in whitelist", parent, child);
 
     if (parent.includes('*')) {
         match = RegExp(`${parent.replace(/\*/g, '.*')}`);
@@ -267,10 +248,7 @@ function mtRun() {
                         if (opacity > 0) {
                             started = true;
                             lastStrokeTime = now;
-
-                            if (debug) {
-                                console.log("started");
-                            }
+                            debugLog("started");
                         }
                         resolve();
                     }))
@@ -318,8 +296,20 @@ const mtPushKey = (key, duration) => {
     };
 
     history.push(entry);
+    debugLog(`${duration}: ${(key)} ${correctness ? '✓' : 'x'}`);
+}
 
+// End the monkeytype test
+function mtEndTest() {
+    debugLog("monkeytype test ended");
+    debugLog(history);
+    started = false;
+    saveData();
+}
+
+// Debug print of debug enabled
+function debugLog(message) {
     if (debug) {
-        console.log(`${duration}: ${(key)} ${correctness ? '✓' : 'x'}`);
+        console.log(message);
     }
 }

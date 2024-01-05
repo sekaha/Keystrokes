@@ -73,7 +73,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 chrome.tabs.onUpdated.addListener((id, change, tab) => {
     // Send activation messages to each tab
-
     if (activeTabs.includes(id)) {
         console.log("URL change check");
 
