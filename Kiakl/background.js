@@ -1,5 +1,3 @@
-let activeTabs = [];
-
 // Receive new tab messages, unload and load them to be activated/deactivated
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     switch (message.action) {
@@ -77,7 +75,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });*/
 
 function forActiveTabs(message) {
-    chrome.tabs.query({ active: true }, (tabs) => {
+    chrome.tabs.query({}, (tabs) => {
         tabs.forEach((tab) => {
             try {
                 chrome.tabs.sendMessage(tab.id, message);
