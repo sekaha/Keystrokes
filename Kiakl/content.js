@@ -1,9 +1,11 @@
 const debug = true;
 let lastStrokeTime, extensionEnabled, started, history, mtTimer, mtActiveWord, keyMap, keyboardType, currentUrl;
-console.log("active on page at least");
 
 // ** MAIN FUNCTIONALITY ** //
 window.addEventListener('load', startTrackingSession);
+
+// Track this tab for deactivation and various checks in background.js
+chrome.runtime.sendMessage({ action: 'trackTab' });
 
 async function startTrackingSession() {
     // Instantiate variables used throughout the program
@@ -21,9 +23,6 @@ async function startTrackingSession() {
     ({ extensionEnabled } = await chrome.storage.local.get({ extensionEnabled: false }));
     ({ keyMap } = await chrome.storage.local.get({ keyMap: getDefaultMapping() }));
     ({ savedKeyboardType: keyboardType } = await chrome.storage.local.get({ savedKeyboardType: "rowStagger" }));
-
-    // Track this tab for deactivation and various checks in background.js
-    chrome.runtime.sendMessage({ action: 'trackTab' });
 
     // Handle all URL cases starting with special cases (just monkeytype for now)
     if (await isWhitelisted()) {
@@ -50,10 +49,14 @@ async function startTrackingSession() {
 // Save data if the tab ends or is reloaded, this marks the end of a session (among other special conditions for typing games) 
 window.addEventListener('beforeunload', () => {
     if (extensionEnabled) {
-        chrome.runtime.sendMessage({ action: 'untrackTab' });
         endTrackingSession();
     }
-})
+});
+
+// Completely untrack tab in the background script.... maybe not necessary if I rework things
+window.addEventListener('unload', () => {
+    chrome.runtime.sendMessage({ action: 'untrackTab' });
+});
 
 // Get activation/deactivation messages
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -174,9 +177,14 @@ function renewSession() {
 function checkSiteUpdates(mutationsList) {
     mutationsList.forEach((mutation) => {
         if (mutation.type === 'childList') {
+            // Check if the #active towards have gone away (the end screen)
             mtActiveWord = document.querySelector('#words .word.active');
 
-            if (started && mtActiveWord == null) {
+            // If you cancel midway through by switching to a different time setting or something, then the above check won't work, but it should still end
+            const timer = document.querySelector('#typingTest .time');
+            const opacity = parseFloat(window.getComputedStyle(timer).getPropertyValue('opacity'));
+
+            if (started && (mtActiveWord == null || (opacity == 0))) {
                 if (debug) {
                     console.log("monkeytype test ended");
                     console.log(history);
@@ -186,10 +194,6 @@ function checkSiteUpdates(mutationsList) {
             }
         }
     });
-}
-
-function changePages() {
-
 }
 
 // ** WHITELIST UTILS ** //
