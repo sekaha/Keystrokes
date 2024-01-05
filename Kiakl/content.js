@@ -131,10 +131,12 @@ const saveData = async () => {
 // Run for generic websites
 function run() {
     window.onkeydown = async function (event) {
-        const now = performance.now();
-        const timeToType = now - lastStrokeTime;
-        lastStrokeTime = now;
-        pushKey(normalizeKey(event.key), timeToType);
+        if (extensionEnabled) {
+            const now = performance.now();
+            const timeToType = now - lastStrokeTime;
+            lastStrokeTime = now;
+            pushKey(normalizeKey(event.key), timeToType);
+        }
     }
 }
 
@@ -189,7 +191,9 @@ async function isWhitelisted() {
         }
     }
 
+    // If the website is not whitelisted, the session needs to end
     debugLog("website not whitelisted");
+    endTrackingSession();
     return false;
 }
 
