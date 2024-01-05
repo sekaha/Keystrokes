@@ -3,9 +3,7 @@ let lastStrokeTime, extensionEnabled, started, history, mtTimer, mtActiveWord, k
 
 // ** MAIN FUNCTIONALITY ** //
 window.addEventListener('load', startTrackingSession);
-
-// Track this tab for deactivation and various checks in background.js
-chrome.runtime.sendMessage({ action: 'trackTab' });
+window.kiaklActive = true;
 
 async function startTrackingSession() {
     // Instantiate variables used throughout the program
@@ -49,11 +47,6 @@ window.addEventListener('beforeunload', () => {
     if (extensionEnabled) {
         endTrackingSession();
     }
-});
-
-// Completely untrack tab in the background script.... maybe not necessary if I rework things
-window.addEventListener('unload', () => {
-    chrome.runtime.sendMessage({ action: 'untrackTab' });
 });
 
 // Get activation/deactivation messages

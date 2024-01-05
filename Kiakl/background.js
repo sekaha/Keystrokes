@@ -6,34 +6,23 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         // Toggle extension
         case 'toggleExtension': {
             // Send activation messages to each tab
-            activeTabs.forEach(tabId => {
-                chrome.tabs.sendMessage(tabId, { extensionEnabled: message.extensionEnabled })
-                    .catch(error => console.error('Error toggeling tabs:', error));
-            });
-            console.log(activeTabs);
+            forActiveTabs({ extensionEnabled: message.extensionEnabled });
             break;
         }
 
         // Reload extension's layout
         case 'updateLayout': {
-            // Send activation messages to each tab
-            activeTabs.forEach(tabId => {
-                chrome.tabs.sendMessage(tabId, { action: "updateLayout" })
-                    .catch(error => console.error('Error updating layout in tabs:', error));
-            });
+            forActiveTabs({ action: "updateLayout" });
             break;
         }
 
         // Reload extension's whitelist
         case 'updateWhitelist': {
-            // Send activation messages to each tab
-            activeTabs.forEach(tabId => {
-                chrome.tabs.sendMessage(tabId, { action: "updateWhitelist" })
-                    .catch(error => console.error('Error updating whitelist in tabs:', error));
-            });
+            forActiveTabs({ action: "updateWhitelist" });
             break;
         }
 
+        // Check if the currently focused tab of the popup is whitelisted or not.
         case 'checkWhitelisted': {
             const getPopupTab = () => new Promise((resolve) => {
                 chrome.tabs.query({ active: true, currentWindow: true }, resolve);
@@ -44,7 +33,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 const tabs = await getPopupTab();
 
                 chrome.tabs.sendMessage(tabs[0].id, { action: "requestWhitelisted" }, (response) => {
-                    sendResponse({ whitelisted: response ? response.whitelisted : false }).catch(error => console.error('Error checking white list:', error));
+                    sendResponse({ whitelisted: response ? response.whitelisted : false }); //.catch(error => console.error('Error checking white list:', error));
                 })
             })();
 
@@ -53,7 +42,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         }
 
         // Add tab to tracking list
-        case 'trackTab': {
+        /*case 'trackTab': {
             if (!activeTabs.includes(sender.tab.id)) {
                 activeTabs.push(sender.tab.id);
             }
@@ -68,11 +57,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 activeTabs.splice(tabIndex, 1);
             }
             break;
-        }
+
+            // simply send message
+            // default: {}
+        }*/
     }
 });
 
-chrome.tabs.onUpdated.addListener((id, change, tab) => {
+/*chrome.tabs.onUpdated.addListener((id, change, tab) => {
     // Send activation messages to each tab
     if (activeTabs.includes(id)) {
         console.log("URL change check");
@@ -82,4 +74,16 @@ chrome.tabs.onUpdated.addListener((id, change, tab) => {
     } else {
         console.log("");
     }
-});
+});*/
+
+function forActiveTabs(message) {
+    chrome.tabs.query({ active: true }, (tabs) => {
+        tabs.forEach((tab) => {
+            try {
+                chrome.tabs.sendMessage(tab.id, message);
+            } catch (error) {
+                console.log("tab loaded with no content script injected, ignoring tab");
+            }
+        });
+    });
+}
