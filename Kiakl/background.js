@@ -66,13 +66,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
 });
 
-chrome.tabs.onUpdated.addListener((id, change, tab) => {
-    // Send activation messages to each tab
-    try {
-        console.log("URL change check");
-        chrome.tabs.sendMessage(id, { action: "updateWhitelist" });
-    } catch {
-        console.log("tab loaded with no content script injected, ignoring tab");
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+    if (changeInfo.status === 'complete') {
+        chrome.tabs.sendMessage(tabId, { checkScript: true }, (response) => {
+            if (chrome.runtime.lastError || !response || response.error) {
+                console.log("Tab loaded with no content script injected, ignoring tab");
+            } else {
+                console.log("URL change check");
+                chrome.tabs.sendMessage(tabId, { action: "updateWhitelist" });
+            }
+        });
     }
 });
 

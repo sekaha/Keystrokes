@@ -3,7 +3,7 @@ let lastStrokeTime, extensionEnabled, started, history, mtTimer, mtActiveWord, k
 
 // ** MAIN FUNCTIONALITY ** //
 window.addEventListener('load', startTrackingSession);
-window.kiaklActive = true;
+window.kiaklKeyloggerActive = true;
 
 async function startTrackingSession() {
     // Instantiate variables used throughout the program
@@ -51,6 +51,11 @@ window.addEventListener('beforeunload', () => {
 
 // Get activation/deactivation messages
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.checkScript) {
+        // Check if the content script is injected successfully
+        sendResponse({ success: true });
+    }
+
     if ((message.action) == "updateLayout") {
         debugLog("layout updated");
         renewSession();
