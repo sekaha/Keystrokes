@@ -62,17 +62,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
 });
 
-/*chrome.tabs.onUpdated.addListener((id, change, tab) => {
+chrome.tabs.onUpdated.addListener((id, change, tab) => {
     // Send activation messages to each tab
-    if (activeTabs.includes(id)) {
+    try {
         console.log("URL change check");
-
         chrome.tabs.sendMessage(id, { action: "updateWhitelist" })
             .catch(error => console.error('Error updating tab:', error));
-    } else {
-        console.log("");
+    } catch {
+        console.log("tab loaded with no content script injected, ignoring tab");
     }
-});*/
+});
 
 function forActiveTabs(message) {
     chrome.tabs.query({}, (tabs) => {
