@@ -22,18 +22,22 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
         // Check if the currently focused tab of the popup is whitelisted or not.
         case 'checkWhitelisted': {
-            const getPopupTab = () => new Promise((resolve) => {
-                chrome.tabs.query({ active: true, currentWindow: true }, resolve);
-            });
+            try {
+                const getPopupTab = () => new Promise((resolve) => {
+                    chrome.tabs.query({ active: true, currentWindow: true }, resolve);
+                });
 
-            // Waiting for the tab query is asynch, so make an async function and call it
-            (async () => {
-                const tabs = await getPopupTab();
+                // Waiting for the tab query is asynch, so make an async function and call it
+                (async () => {
+                    const tabs = await getPopupTab();
 
-                chrome.tabs.sendMessage(tabs[0].id, { action: "requestWhitelisted" }, (response) => {
-                    sendResponse({ whitelisted: response ? response.whitelisted : false }); //.catch(error => console.error('Error checking white list:', error));
-                })
-            })();
+                    chrome.tabs.sendMessage(tabs[0].id, { action: "requestWhitelisted" }, (response) => {
+                        sendResponse({ whitelisted: response ? response.whitelisted : false }); //.catch(error => console.error('Error checking white list:', error));
+                    })
+                })();
+            } catch {
+                console.log("tab loaded with no content script injected, ignoring tab");
+            }
 
             // Return true to indicate info will be sent asycnhronously
             return true;
