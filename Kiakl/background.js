@@ -66,8 +66,7 @@ chrome.tabs.onUpdated.addListener((id, change, tab) => {
     // Send activation messages to each tab
     try {
         console.log("URL change check");
-        chrome.tabs.sendMessage(id, { action: "updateWhitelist" })
-            .catch(error => console.error('Error updating tab:', error));
+        chrome.tabs.sendMessage(id, { action: "updateWhitelist" });
     } catch {
         console.log("tab loaded with no content script injected, ignoring tab");
     }
