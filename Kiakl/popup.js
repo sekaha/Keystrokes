@@ -142,8 +142,11 @@ function saveLayout() {
 
     layoutSaveButton.setAttribute('disabled', true);
 
-    const keyMap = { ...mapToQwerty(layouts.main), ...mapToQwerty(layouts.shift) };
-    chrome.storage.local.set({ keyMap });
+    let keyMapArray = [];
+
+    mapToQwerty(layouts.main, keyMapArray)
+    mapToQwerty(layouts.shift, keyMapArray)
+    chrome.storage.local.set({ keyMapArray });
 
     // Make each tab update to be in the new layout
     chrome.runtime.sendMessage({ action: 'updateLayout' });
@@ -388,25 +391,20 @@ function updateValidity(layout) {
     layout.textArea.classList.remove("invalid");
 }
 
-function mapToQwerty(layout) {
-    let mapping = { " ": " " };
+function mapToQwerty(layout, keyMapArray) {
     lines = layout.temp.split("\n");
     defaultLines = layout.defaultText.split("\n");
     newMain = "";
 
     for (let i = 0; i < defaultLines.length; i++) {
         for (let j = 0; j < defaultLines[i].length; j++) {
-            if (i < lines.length && j < lines[i].length && lines[i].charAt(j) != " ") {
-                mapping[lines[i].charAt(j)] = defaultLines[i].charAt(j)
-            } else {
-                mapping[defaultLines[i].charAt(j)] = defaultLines[i].charAt(j)
-            }
+            // If the userchar is defined at that position (i.e. there's a line, it's not after the end of that line, and the char isn't a space) then add it to the map
+            const defaultChar = defaultLines[i].charAt(j);
+            const mappedChar = (i < lines.length && j < lines[i].length && lines[i].charAt(j) !== " ") ?
+                lines[i].charAt(j) : defaultChar;
+
+            // Push a key value pair to the map, since actual maps can't be saved in chrome storage :p
+            keyMapArray.push([mappedChar, defaultChar]);
         }
     }
-
-    if (debug) {
-        console.log(mapping);
-    }
-
-    return mapping;
 }

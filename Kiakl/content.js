@@ -25,8 +25,11 @@ async function startTrackingSession() {
 
     // Load if the extension is activated or not
     ({ extensionEnabled } = await chrome.storage.local.get({ extensionEnabled: false }));
-    ({ keyMap } = await chrome.storage.local.get({ keyMap: getDefaultMapping() }));
     ({ savedKeyboardType: keyboardType } = await chrome.storage.local.get({ savedKeyboardType: "rowStagger" }));
+    ({ keyMapArray } = await chrome.storage.local.get({ keyMapArray: getDefaultMapping() }));
+    keyMap = new Map(keyMapArray);
+
+    console.log(keyMap);
 
     // Handle all URL cases starting with special cases (just monkeytype for now)
     if (await isWhitelisted()) {
@@ -121,7 +124,7 @@ const saveData = async () => {
             website: currentUrl,
             sessionID: Date.now(),
             data: history,
-            layout: Object.keys(keyMap).join(""),
+            layout: [...keyMap.keys()].join(""),
             keyboardType: keyboardType
         };
 
@@ -235,12 +238,18 @@ function normalizeUrl(url) {
 
 // ** KEY MAPPING UTILS ** //
 function normalizeKey(key) {
-    return keyMap[key] !== undefined ? keyMap[key] : key;
+    return keyMap.has(key) ? keyMap.get(key) : key
 }
 
 function getDefaultMapping() {
+    defaultMap = [];
     defaultSet = "~!@#$%^&*()_+QWERTYUIOP{}|ASDFGHJKL:\"ZXCVBNM<>?`1234567890-=qwertyuiop[]\\asdfghjkl;'zxcvbnm,./ ";
-    return Object.fromEntries([...defaultSet].map(char => [char, char]));
+
+    for (let char of defaultSet) {
+        defaultMap.push([char, char]);
+    }
+
+    return defaultMap;
 }
 
 // ** MONKEY TYPE ** //
