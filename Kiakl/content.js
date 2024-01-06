@@ -1,5 +1,6 @@
 const debug = true;
-let lastStrokeTime, extensionEnabled, started, history, mtTimer, mtActiveWord, keyMap, keyboardType, currentUrl;
+let history = [];
+let lastStrokeTime, extensionEnabled, started, mtTimer, mtActiveWord, keyMap, keyboardType, currentUrl;
 
 // ** MAIN FUNCTIONALITY ** //
 window.addEventListener('load', startTrackingSession);
