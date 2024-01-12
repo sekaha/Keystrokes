@@ -1,5 +1,5 @@
 const debug = true;
-const mtTimers = ['#typingTest .time', '#typingTest #timerNumber', '#timerWrapper']; // #timer.timerMain
+const mtTimers = ['#typingTest .time', '#typingTest #timerNumber', '#timer'];
 
 let testType;
 let history = [];
@@ -275,8 +275,7 @@ function mtRun() {
                         for (const timer of mtTimers) {
                             const opacity = parseFloat(window.getComputedStyle(document.querySelector(timer)).getPropertyValue('opacity'));
 
-                            if (opacity > 0.1) {
-                                console.log(opacity);
+                            if (opacity > 0) {
                                 mtTimer = timer;
                                 started = true;
                                 lastStrokeTime = now;
