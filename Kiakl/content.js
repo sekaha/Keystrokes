@@ -1,4 +1,7 @@
 const debug = true;
+const mtTimers = ['#typingTest .time', '#typingTest #timerNumber', '#timer'];
+
+let testType;
 let history = [];
 let lastStrokeTime, extensionEnabled, started, mtTimer, mtActiveWord, keyMap, keyboardType, currentUrl;
 
@@ -174,20 +177,23 @@ function renewSession() {
 
 // Callback function for MutationObserver, ends the test if certain divs aren't active, or checks if the page HREF has changed
 function checkSiteUpdates(mutationsList) {
-    mutationsList.forEach((mutation) => {
-        if (mutation.type === 'childList') {
-            // Check if the #active towards have gone away (the end screen)
-            mtActiveWord = document.querySelector('#words .word.active');
+    if (currentUrl == "https://monkeytype.com/") {
+        mutationsList.forEach((mutation) => {
+            if (mutation.type === 'childList') {
+                if (started) {
+                    // Check if the #active towards have gone away (the end screen)
+                    mtActiveWord = document.querySelector('#words .word.active');
 
-            // If you cancel midway through by switching to a different time setting or something, then the above check won't work, but it should still end
-            const timer = document.querySelector('#typingTest .time');
-            const opacity = parseFloat(window.getComputedStyle(timer).getPropertyValue('opacity'));
+                    // If you cancel midway through by switching to a different time setting or something, then the above check won't work, but it should still end
+                    const opacity = parseFloat(window.getComputedStyle(document.querySelector(mtTimer)).getPropertyValue('opacity'));
 
-            if (started && (mtActiveWord == null || (opacity == 0))) {
-                mtEndTest();
+                    if ((mtActiveWord == null || (opacity == 0))) {
+                        mtEndTest();
+                    }
+                }
             }
-        }
-    });
+        });
+    }
 }
 
 // ** WHITELIST UTILS ** //
@@ -264,14 +270,20 @@ function mtRun() {
                 if (!started) {
                     await new Promise(resolve => requestAnimationFrame(() => {
                         // We determine if the game has started based on the opacity of the timer... it's janky to say the least
-                        const timer = document.querySelector('#typingTest .time');
-                        const opacity = parseFloat(window.getComputedStyle(timer).getPropertyValue('opacity'));
 
-                        if (opacity > 0) {
-                            started = true;
-                            lastStrokeTime = now;
-                            debugLog("started");
+                        // There are 3 timer types we gotta switch between
+                        for (const timer of mtTimers) {
+                            const opacity = parseFloat(window.getComputedStyle(document.querySelector(timer)).getPropertyValue('opacity'));
+
+                            if (opacity > 0) {
+                                mtTimer = timer;
+                                started = true;
+                                lastStrokeTime = now;
+                                debugLog(`started ${mtTimer} timer`);
+                                break;
+                            }
                         }
+
                         resolve();
                     }))
                 }
