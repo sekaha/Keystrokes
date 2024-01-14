@@ -43,7 +43,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 const tabs = await getPopupTab();
 
                 chrome.tabs.sendMessage(tabs[0].id, { action: "requestWhitelisted" }, (response) => {
-                    sendResponse({ whitelisted: response ? response.whitelisted : false }); //.catch(error => console.error('Error checking whitelist:', error));
+                    if (chrome.runtime.lastError) {
+                        sendResponse({ whitelisted: false });
+                    } else {
+                        sendResponse({ whitelisted: response ? response.whitelisted : false }); 1
+                    }
                 })
             })();
 
@@ -71,10 +75,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
 });
 
-chrome.tabs.onUpdated.addListener((tabId, change, tab) => {
+chrome.tabs.onUpdated.addListener((tabId) => {
     // Send activation messages to each tab
-    if (activeTabs.includes(tabId)) {
-        chrome.tabs.sendMessage(tabId, { action: "updateWhitelist" })
-            .catch(error => console.error('Error updating tab url:', error));
+    try {
+        if (activeTabs.includes(tabId)) {
+            chrome.tabs.sendMessage(tabId, { action: "updateWhitelist" })
+            //.catch(error => console.error('Error updating tab url:', error));
+        }
+    } catch (e) {
+        // this is a special age where injection isn't allowed, so just ignore
     }
 });
