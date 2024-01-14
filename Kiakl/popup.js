@@ -132,24 +132,32 @@ async function loadInitialData() {
 
 // Function to save layouts to local storage
 function saveLayout() {
-    layouts.main.saved = layouts.main.temp;
-    layouts.shift.saved = layouts.shift.temp;
-    savedKeyboardType = tempKeyboardType;
-
-    chrome.storage.local.set({ savedMainLayout: layouts.main.saved });
-    chrome.storage.local.set({ savedShiftLayout: layouts.shift.saved });
-    chrome.storage.local.set({ savedKeyboardType });
-
-    layoutSaveButton.setAttribute('disabled', true);
-
     let keyMapArray = [];
 
-    mapToQwerty(layouts.main, keyMapArray)
-    mapToQwerty(layouts.shift, keyMapArray)
-    chrome.storage.local.set({ keyMapArray });
+    if (mapToQwerty(layouts.main, keyMapArray)) {
+        if (mapToQwerty(layouts.shift, keyMapArray)) {
+            // Layout valid and succesful
+            chrome.storage.local.set({ keyMapArray });
 
-    // Make each tab update to be in the new layout
-    chrome.runtime.sendMessage({ action: 'updateLayout' });
+            layouts.main.saved = layouts.main.temp;
+            layouts.shift.saved = layouts.shift.temp;
+            savedKeyboardType = tempKeyboardType;
+
+            chrome.storage.local.set({ savedMainLayout: layouts.main.saved });
+            chrome.storage.local.set({ savedShiftLayout: layouts.shift.saved });
+            chrome.storage.local.set({ savedKeyboardType });
+            layoutSaveButton.setAttribute('disabled', true);
+
+            // Make each tab update to be in the new layout
+            chrome.runtime.sendMessage({ action: 'updateLayout' });
+        } else {
+            // Indicate error on shift layout
+            layouts.shift.textArea.classList.add("invalid");
+        }
+    } else {
+        // Indicate error on main layout
+        layouts.main.textArea.classList.add("invalid");
+    }
 }
 
 // Function to save the whitelist to the local storage
@@ -391,11 +399,14 @@ function updateValidity(layout) {
     layout.textArea.classList.remove("invalid");
 }
 
+// Make a map from the layout to the normalized qwerty, returns bool if successful
 function mapToQwerty(layout, keyMapArray) {
     lines = layout.temp.split("\n");
     defaultLines = layout.defaultText.split("\n");
+    tempSet = [];
     newMain = "";
 
+    // the onion layer is added if values not specified, this handles ansi v.s. iso for example
     for (let i = 0; i < defaultLines.length; i++) {
         for (let j = 0; j < defaultLines[i].length; j++) {
             // If the userchar is defined at that position (i.e. there's a line, it's not after the end of that line, and the char isn't a space) then add it to the map
@@ -403,8 +414,16 @@ function mapToQwerty(layout, keyMapArray) {
             const mappedChar = (i < lines.length && j < lines[i].length && lines[i].charAt(j) !== " ") ?
                 lines[i].charAt(j) : defaultChar;
 
+            // Check for duplicates
+            if (keyMapArray.map(x => x[0]).includes(mappedChar)) {
+                return false;
+            }
+            tempSet.push(mappedChar);
+
             // Push a key value pair to the map, since actual maps can't be saved in chrome storage :p
             keyMapArray.push([mappedChar, defaultChar]);
         }
     }
+
+    return true;
 }
