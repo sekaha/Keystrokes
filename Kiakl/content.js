@@ -337,7 +337,6 @@ const mtPushKey = (key, duration) => {
 // End the monkeytype test
 function mtEndTest() {
     debugLog("monkeytype test ended");
-    debugLog(history);
     started = false;
     saveData();
 }

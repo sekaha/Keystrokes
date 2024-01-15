@@ -43,6 +43,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 const tabs = await getPopupTab();
 
                 chrome.tabs.sendMessage(tabs[0].id, { action: "requestWhitelisted" }, (response) => {
+                    // Special sites (new tab, chrome://extensions, etc) need to get filtered since they'll error
                     if (chrome.runtime.lastError) {
                         sendResponse({ whitelisted: false });
                     } else {

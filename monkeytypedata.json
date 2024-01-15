@@ -1,0 +1,270 @@
+[
+  {
+    "data": [
+      {
+        "correct": true,
+        "interval": 0,
+        "key": "b"
+      },
+      {
+        "correct": true,
+        "interval": 120.10000000149012,
+        "key": "y"
+      },
+      {
+        "correct": true,
+        "interval": 80.69999999925494,
+        "key": " "
+      },
+      {
+        "correct": true,
+        "interval": 116,
+        "key": "d"
+      },
+      {
+        "correct": true,
+        "interval": 68.30000000074506,
+        "key": "o"
+      },
+      {
+        "correct": true,
+        "interval": 113.39999999850988,
+        "key": "w"
+      },
+      {
+        "correct": true,
+        "interval": 39.600000001490116,
+        "key": "n"
+      },
+      {
+        "correct": true,
+        "interval": 87.69999999925494,
+        "key": " "
+      },
+      {
+        "correct": true,
+        "interval": 96.09999999962747,
+        "key": "n"
+      },
+      {
+        "correct": true,
+        "interval": 120.20000000111759,
+        "key": "u"
+      },
+      {
+        "correct": true,
+        "interval": 144.19999999925494,
+        "key": "m"
+      },
+      {
+        "correct": true,
+        "interval": 38.80000000074506,
+        "key": "b"
+      },
+      {
+        "correct": true,
+        "interval": 127.69999999925494,
+        "key": "e"
+      },
+      {
+        "correct": true,
+        "interval": 85.59999999962747,
+        "key": "r"
+      },
+      {
+        "correct": true,
+        "interval": 70.70000000111759,
+        "key": " "
+      },
+      {
+        "correct": true,
+        "interval": 32.899999998509884,
+        "key": "s"
+      },
+      {
+        "correct": true,
+        "interval": 79.80000000074506,
+        "key": "y"
+      },
+      {
+        "correct": true,
+        "interval": 115.09999999962747,
+        "key": "s"
+      },
+      {
+        "correct": true,
+        "interval": 68.09999999962747,
+        "key": "t"
+      },
+      {
+        "correct": true,
+        "interval": 112.90000000037253,
+        "key": "e"
+      },
+      {
+        "correct": true,
+        "interval": 38.5,
+        "key": "m"
+      },
+      {
+        "correct": true,
+        "interval": 152.40000000037253,
+        "key": " "
+      },
+      {
+        "correct": true,
+        "interval": 113.40000000037253,
+        "key": "l"
+      },
+      {
+        "correct": true,
+        "interval": 80.5,
+        "key": "a"
+      },
+      {
+        "correct": true,
+        "interval": 67.29999999888241,
+        "key": "s"
+      },
+      {
+        "correct": true,
+        "interval": 83,
+        "key": "t"
+      },
+      {
+        "correct": true,
+        "interval": 105.70000000111759,
+        "key": " "
+      },
+      {
+        "correct": true,
+        "interval": 40.90000000037253,
+        "key": "u"
+      },
+      {
+        "correct": true,
+        "interval": 110.79999999888241,
+        "key": "s"
+      },
+      {
+        "correct": true,
+        "interval": 81.20000000111759,
+        "key": "e"
+      },
+      {
+        "correct": true,
+        "interval": 34.5,
+        "key": " "
+      },
+      {
+        "correct": true,
+        "interval": 149.69999999925494,
+        "key": "m"
+      },
+      {
+        "correct": true,
+        "interval": 122.5,
+        "key": "o"
+      },
+      {
+        "correct": true,
+        "interval": 69,
+        "key": "e"
+      },
+      {
+        "correct": true,
+        "interval": 3.099999999627471,
+        "key": "r"
+      },
+      {
+        "correct": false,
+        "interval": 35.5,
+        "key": " "
+      },
+      {
+        "correct": true,
+        "interval": 139.2000000011176,
+        "key": "p"
+      },
+      {
+        "correct": true,
+        "interval": 156.39999999850988,
+        "key": "e"
+      },
+      {
+        "correct": true,
+        "interval": 118.10000000149012,
+        "key": "o"
+      },
+      {
+        "correct": false,
+        "interval": 290.3999999985099,
+        "key": "Control"
+      },
+      {
+        "correct": false,
+        "interval": 110.70000000111759,
+        "key": "Backspace"
+      },
+      {
+        "correct": false,
+        "interval": 218.90000000037253,
+        "key": "Backspace"
+      },
+      {
+        "correct": false,
+        "interval": 146.19999999925494,
+        "key": "Backspace"
+      },
+      {
+        "correct": true,
+        "interval": 201.90000000037253,
+        "key": "r"
+      },
+      {
+        "correct": true,
+        "interval": 68.40000000037253,
+        "key": "e"
+      },
+      {
+        "correct": false,
+        "interval": 182.69999999925494,
+        "key": "Backspace"
+      },
+      {
+        "correct": false,
+        "interval": 138.80000000074506,
+        "key": "Backspace"
+      },
+      {
+        "correct": false,
+        "interval": 133.39999999850988,
+        "key": "Backspace"
+      },
+      {
+        "correct": true,
+        "interval": 76.10000000149012,
+        "key": "r"
+      },
+      {
+        "correct": true,
+        "interval": 35.79999999888241,
+        "key": "e"
+      },
+      {
+        "correct": true,
+        "interval": 71.30000000074506,
+        "key": " "
+      },
+      {
+        "correct": true,
+        "interval": 137.2999999988824,
+        "key": "o"
+      }
+    ],
+    "keyboardType": "rowStagger",
+    "layout": "~!@#$%^&*()_+QWERTYUIOP{}|ASDFGHJKL:\"ZXCVBNM<>?`1234567890-=qwertyuiop[]\\asdfghjkl;'zxcvbnm,./ ",
+    "sessionID": 1705282488048,
+    "website": "https://monkeytype.com/"
+  }
+]
