@@ -1,9 +1,9 @@
 const debug = true;
-const mtTimers = ['#typingTest .time', '#typingTest #timerNumber', '#timer'];
-
+const mtTimers = ['#typingTest .time', '#typingTest #timerNumber', '#timerWrapper'];
+let mtTimer = mtTimers[0];
 let testType;
 let history = [];
-let lastStrokeTime, extensionEnabled, started, mtTimer, mtActiveWord, keyMap, keyboardType, currentUrl;
+let lastStrokeTime, extensionEnabled, started, mtActiveWord, keyMap, keyboardType, currentUrl;
 
 // ** MAIN FUNCTIONALITY ** //
 window.addEventListener('load', startTrackingSession);
@@ -31,8 +31,6 @@ async function startTrackingSession() {
     ({ savedKeyboardType: keyboardType } = await chrome.storage.local.get({ savedKeyboardType: "rowStagger" }));
     ({ keyMapArray } = await chrome.storage.local.get({ keyMapArray: getDefaultMapping() }));
     keyMap = new Map(keyMapArray);
-
-    console.log(keyMap);
 
     // Handle all URL cases starting with special cases (just monkeytype for now)
     if (await isWhitelisted()) {
@@ -180,16 +178,15 @@ function checkSiteUpdates(mutationsList) {
     if (currentUrl == "https://monkeytype.com/") {
         mutationsList.forEach((mutation) => {
             if (mutation.type === 'childList') {
-                if (started) {
-                    // Check if the #active towards have gone away (the end screen)
-                    mtActiveWord = document.querySelector('#words .word.active');
+                // Check if the #active towards have gone away (the end screen)
+                mtActiveWord = document.querySelector('#words .word.active');
 
-                    // If you cancel midway through by switching to a different time setting or something, then the above check won't work, but it should still end
-                    const opacity = parseFloat(window.getComputedStyle(document.querySelector(mtTimer)).getPropertyValue('opacity'));
+                // If you cancel midway through by switching to a different time setting or something, then the above check won't work, but it should still end
+                const timer = document.querySelector(mtTimer);
+                const opacity = parseFloat(window.getComputedStyle(timer).getPropertyValue('opacity'));
 
-                    if ((mtActiveWord == null || (opacity == 0))) {
-                        mtEndTest();
-                    }
+                if (started && (mtActiveWord == null || (opacity == 0))) {
+                    mtEndTest();
                 }
             }
         });
@@ -204,7 +201,6 @@ async function isWhitelisted() {
     for (const site of savedWhitelist.split("\n")) {
         if (urlMatches(site, currentUrl)) {
             debugLog("website match found");
-
             return true;
         }
     }
@@ -268,9 +264,8 @@ function mtRun() {
             await new Promise(resolve => requestAnimationFrame(async () => {
                 // In the case of the timer, you have to wait two frames unfortunately
                 if (!started) {
+                    // We determine if the game has started based on the opacity of the timer... it's janky to say the least
                     await new Promise(resolve => requestAnimationFrame(() => {
-                        // We determine if the game has started based on the opacity of the timer... it's janky to say the least
-
                         // There are 3 timer types we gotta switch between
                         for (const timer of mtTimers) {
                             const opacity = parseFloat(window.getComputedStyle(document.querySelector(timer)).getPropertyValue('opacity'));
@@ -302,6 +297,12 @@ function mtRun() {
 
 // Add a key to the history log
 const mtPushKey = (key, duration) => {
+    // If there's an error, it's because of usage of the bar timer being kinda wonky, if there's on quwery selector all letter then the test is over
+    if (mtActiveWord == null) {
+        endTrackingSession();
+        return;
+    }
+
     let correctness = false;
 
     // Check if the key is correct or not by checking divs on monkeytype that reflect this
