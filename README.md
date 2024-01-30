@@ -10,4 +10,5 @@ To use the extension:
 
 https://github.com/sekaha/Kiakl/assets/22718210/0e436f9c-e49d-4c23-98d0-77335d3ec6e6
 
+CLick on the image below to open the youtube link :) 
 [![Video](https://img.youtube.com/vi/dMOCIV8tdak/maxresdefault.jpg)](https://www.youtube.com/watch?v=dMOCIV8tdak)
