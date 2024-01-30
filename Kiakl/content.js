@@ -245,7 +245,7 @@ function normalizeKey(key) {
 
 function getDefaultMapping() {
     defaultMap = [];
-    defaultSet = "~!@#$%^&*()_+QWERTYUIOP{}|ASDFGHJKL:\"ZXCVBNM<>?`1234567890-=qwertyuiop[]\\asdfghjkl;'zxcvbnm,./ ";
+    defaultSet = "`1234567890-=qwertyuiop[]\\asdfghjkl;'zxcvbnm,./~!@#$%^&*()_+QWERTYUIOP{}|ASDFGHJKL:\"ZXCVBNM<>?";
 
     for (let char of defaultSet) {
         defaultMap.push([char, char]);
