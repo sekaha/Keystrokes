@@ -1,8 +1,9 @@
-// Variables
 const submissionPageUrl = "https://forms.gle/rnjxrSd16K6q9Dry9";
 const maxRowLengths = [13, 13, 11, 10];
-let debug = false;
+const debug = false;
 
+// NOTE: should probably make more versatile in the future to support different keyboard types etc
+// that's unlikely to happen in the near future lol
 const layouts = {
     main: {
         temp: undefined,
@@ -125,7 +126,7 @@ async function loadInitialData() {
 
     chrome.storage.local.get({ extensionEnabled: false }, (result) => {
         extensionEnabled = result.extensionEnabled;
-        updateState();
+        updateGraphics();
     });
 }
 
@@ -170,7 +171,7 @@ async function saveWhitelist() {
     await chrome.runtime.sendMessage({ action: 'updateWhitelist' });
 
     // Update if the site is now whitelisted
-    isCurrentTabWhitelisted().then(updateState);
+    isCurrentTabWhitelisted().then(updateGraphics);
 }
 
 // Toggling the extension status
@@ -179,7 +180,7 @@ function toggleExtension() {
         extensionEnabled = !extensionEnabled;
         chrome.runtime.sendMessage({ action: 'toggleExtension', extensionEnabled: extensionEnabled });
         chrome.storage.local.set({ extensionEnabled });
-        updateState();
+        updateGraphics();
     }
 }
 
@@ -365,7 +366,7 @@ async function isCurrentTabWhitelisted() {
 }
 
 // Function to extension state and reflect that in pop up
-function updateState() {
+function updateGraphics() {
     lightMode = (extensionEnabled && whitelisted)
     let textContent;
 
@@ -399,7 +400,36 @@ function updateValidity(layout) {
     layout.textArea.classList.remove("invalid");
 }
 
+
+// Make a map from the layout to its position on the keyboard, returns bool if successful
+function mapToQwerty(layout, keyMapArray) {
+    lines = layout.temp.split("\n");
+    defaultLines = layout.defaultText.split("\n");
+    newMain = "";
+
+    // the onion layer is added if values not specified, this handles ansi v.s. iso for example
+    for (let i = 0; i < defaultLines.length; i++) {
+        for (let j = 0; j < defaultLines[i].length; j++) {
+            // If the userchar is defined at that position (i.e. there's a line, it's not after the end of that line, and the char isn't a space) then add it to the map
+            const defaultChar = defaultLines[i].charAt(j);
+            const mappedChar = (i < lines.length && j < lines[i].length && lines[i].charAt(j) !== " ") ?
+                lines[i].charAt(j) : defaultChar;
+
+            // Check for duplicates
+            if (keyMapArray.map(x => x[0]).includes(mappedChar)) {
+                return false;
+            }
+
+            // Push a key value pair to the map, since actual maps can't be saved in chrome storage :p
+            keyMapArray.push([mappedChar, (j, i)]);
+        }
+    }
+
+    return true;
+}
+
 // Make a map from the layout to the normalized qwerty, returns bool if successful
+// UPDATE: depricated, now we use a map to positions
 function mapToQwerty(layout, keyMapArray) {
     lines = layout.temp.split("\n");
     defaultLines = layout.defaultText.split("\n");

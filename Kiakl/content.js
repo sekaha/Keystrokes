@@ -1,3 +1,4 @@
+const version = "1.1.0";
 const debug = true;
 const mtTimers = ['#typingTest .time', '#typingTest #timerNumber', '#timerWrapper'];
 let mtTimer = mtTimers[0];
@@ -126,7 +127,8 @@ const saveData = async () => {
             sessionID: Date.now(),
             data: history,
             layout: [...keyMap.keys()].join(""),
-            keyboardType: keyboardType
+            keyboardType: keyboardType,
+            version: version
         };
 
         const { log } = await chrome.storage.local.get({ log: [] });
@@ -239,16 +241,18 @@ function normalizeUrl(url) {
 }
 
 // ** KEY MAPPING UTILS ** //
+// Used to be a direct mapping to QWERTY keyMap.has(key) ? keyMap.get(key) : key
+// Now updated to coordinates
 function normalizeKey(key) {
-    return keyMap.has(key) ? keyMap.get(key) : key
+    return keyMap.has(key) ? keyMap.get(key) : key;
 }
 
 function getDefaultMapping() {
     defaultMap = [];
     defaultSet = "`1234567890-=qwertyuiop[]\\asdfghjkl;'zxcvbnm,./~!@#$%^&*()_+QWERTYUIOP{}|ASDFGHJKL:\"ZXCVBNM<>?";
 
-    for (let char of defaultSet) {
-        defaultMap.push([char, char]);
+    for (i = 0; i < defaultSet.length; i++) {
+        defaultMap.push([defaultSet[i], (i % 30, Math.floor(i / 30))]);
     }
 
     return defaultMap;

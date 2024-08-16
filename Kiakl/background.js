@@ -18,7 +18,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             // Send activation messages to each tab
             activeTabs.forEach(tabId => {
                 chrome.tabs.sendMessage(tabId, { action: "updateLayout" })
-                    .catch(error => console.error('Error upating layuot:', error));
+                    .catch(error => console.error('Error upating layout:', error));
             });
             break;
         }
