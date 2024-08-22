@@ -248,11 +248,11 @@ function normalizeKey(key) {
 }
 
 function getDefaultMapping() {
-    defaultMap = [];
+    defaultMap = [[" ", (0,0)]];
     defaultSet = "`1234567890-=qwertyuiop[]\\asdfghjkl;'zxcvbnm,./~!@#$%^&*()_+QWERTYUIOP{}|ASDFGHJKL:\"ZXCVBNM<>?";
 
     for (i = 0; i < defaultSet.length; i++) {
-        defaultMap.push([defaultSet[i], (i % 30, Math.floor(i / 30))]);
+        defaultMap.push([defaultSet[i], (i % 30, 2-Math.floor(i / 30)+1)]);
     }
 
     return defaultMap;

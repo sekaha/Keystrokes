@@ -403,6 +403,7 @@ function updateValidity(layout) {
 
 // Make a map from the layout to its position on the keyboard, returns bool if successful
 function mapToQwerty(layout, keyMapArray) {
+    keyMapArray.push([" ", (0, 0)]);
     lines = layout.temp.split("\n");
     defaultLines = layout.defaultText.split("\n");
     newMain = "";
@@ -421,7 +422,7 @@ function mapToQwerty(layout, keyMapArray) {
             }
 
             // Push a key value pair to the map, since actual maps can't be saved in chrome storage :p
-            keyMapArray.push([mappedChar, (j, i)]);
+            keyMapArray.push([mappedChar, (j, 2-i+1)]);
         }
     }
 
