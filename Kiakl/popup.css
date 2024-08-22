@@ -60,16 +60,16 @@ body {
 .on:after {
     content: "";
     background: linear-gradient(90deg,
-            oklab(62.8%, 56.25%, 31.5%),
-            oklab(71.3%, 32.5%, 36%),
-            oklab(96%, -16.5%, 49.25%),
-            oklab(87.4%, -55%, 45.25%),
-            oklab(89.3%, -42%, 3.75%),
-            oklab(47.6%, -7.5%, -73.75%),
-            oklab(52.4%, 27.5%, -68%),
-            oklab(67.3%, 68.75%, -23.25%),
-            oklab(62.8%, 56.25%, 31.5%));
-    position: absolute;
+        oklab(62.8% 56.25% 31.5%),
+        oklab(71.3% 32.5% 36%),
+        oklab(96% -16.5% 49.25%),
+        oklab(87.4% -55% 45.25%),
+        oklab(89.3% -42% 3.75%),
+        oklab(47.6% -7.5% -73.75%),
+        oklab(52.4% 27.5% -68%),
+        oklab(67.3% 68.75% -23.25%),
+        oklab(62.8% 56.25% 31.5%));
+position: absolute;
     left: -10px;
     top: 99.5vh;
     background-size: 400%;
